@@ -4,15 +4,18 @@ class GWorkException(Exception):
     def __init__(self, message: str):
         self.message = message
 
+    def __str__(self):
+        return self.message
+
 
 class LogfileNotFound(GWorkException):
     def __init__(self, file: str):
-        super('找不到原神客户端日志文件。' + file)
+        super().__init__('找不到原神客户端日志文件。' + file)
 
 
 class AuthNotFound(GWorkException):
     def __init__(self):
-        super(
+        super().__init__(
             '在日志文件中找不到鉴权信息。'
             '请尝试进入原神，打开祈愿面板，然后点击左下角的 “历史” 浏览一下。'
         )
@@ -20,7 +23,7 @@ class AuthNotFound(GWorkException):
 
 class AuthNotAvailable(GWorkException):
     def __init__(self, context: str):
-        super('鉴权测试失败。' + context)
+        super().__init__('鉴权测试失败。' + context)
 
 
 class RawRespDecodeError(Exception):
