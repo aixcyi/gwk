@@ -16,14 +16,14 @@
 - 本项目：BSD 3-Clause
 - [Django](https://github.com/django/django/tree/stable/3.2.x)：BSD 3-Clause
   - [`django.db.models.enums.ChoicesMeta`](https://github.com/django/django/blob/stable/3.2.x/django/db/models/enums.py) -> `gwk.typing.ChoicesMeta`
-  - [`django.db.models.enums.Choices`](https://github.com/django/django/blob/stable/3.2.x/django/db/models/enums.py) -> `gwk.typing.ChoicesMeta`
+  - [`django.db.models.enums.Choices`](https://github.com/django/django/blob/stable/3.2.x/django/db/models/enums.py) -> `gwk.typing.Choices`
 
 
 ## 参考／References
 
 ### page
 
-get_page()方法内HTTP请求的响应。最外层包装为`GenshinResponse`类。
+`RawCollector.get_page()`方法内HTTP请求的响应。最外层包装为`GenshinResponse`类。
 
 ```JSON
 {
