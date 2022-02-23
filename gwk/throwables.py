@@ -26,6 +26,22 @@ class AuthNotAvailable(GWorkException):
         super().__init__('鉴权测试失败。' + context)
 
 
+class MultiPlayerException(GWorkException):
+    def __init__(self, uid_master: str, uid_other: str):
+        super().__init__(
+            f'如需合并uid为 {uid_master} 与 {uid_other} 的两份祈愿记录，'
+            '请将 multi_uid 设为 True 。'
+        )
+
+
+class MultiRegionException(GWorkException):
+    def __init__(self, region_master: str, region_other: str):
+        super().__init__(
+            f'如需合并地区为 {region_master} 与 {region_other} 的两份祈愿记录，'
+            '请将 multi_region 设为 True 。'
+        )
+
+
 class RawRespDecodeError(Exception):
     def __str__(self):
         return '原始响应解码失败，因为它不是一份合法的JSON字符串。'

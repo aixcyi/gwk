@@ -6,10 +6,11 @@ __all__ = [
     'map_raw_to_basic',
 ]
 
-from datetime import datetime
-from typing import Callable
+from datetime import datetime, timedelta
+from typing import Callable, Union
 
 from gwk.constants import *
+from gwk.throwables import MultiPlayerException, MultiRegionException
 
 
 def map_raw_to_uigf_j2(record: dict) -> dict:
@@ -122,3 +123,101 @@ class Wish(list):
                 self._lang_ = self[0]['lang']
             except IndexError:
                 pass
+
+
+class _WishesStruct:
+    def __init__(self):
+        self.beginner = Wish(WishType.BEGINNERS_WISH)
+        """新手祈愿。"""
+
+        self.wanderlust = Wish(WishType.WANDERLUST_INVOCATION)
+        """常驻祈愿。"""
+
+        self.character = Wish(WishType.CHARACTER_EVENT_WISH)
+        """角色祈愿、角色祈愿-2。"""
+
+        self.weapon = Wish(WishType.WEAPON_EVENT_WISH)
+        """武器祈愿。"""
+
+        self._iter = [
+            self.beginner, self.wanderlust,
+            self.character, self.weapon,
+        ]
+
+    def __iter__(self):
+        return self._iter
+
+    def __len__(self):
+        return len(self._iter)
+
+    def __getitem__(self, index):
+        return self._iter[index]
+
+
+class Player:
+
+    @staticmethod
+    def earliest(fmt: str = '%Y-%m-%d') -> Union[str, datetime]:
+        """
+        原神只能获取最近六个月的祈愿历史记录。
+        此方法用于计算最早可以获取到哪天的祈愿记录。
+
+        :param fmt: 日期时间的字符串格式。若为None，则直接返回datetime对象。
+        :return: 返回一个datetime或str，表示可能获取到的最早的记录的日期。
+        """
+        time = datetime.now() - timedelta(days=6 * 30 - 1)
+        return time.strftime('%Y-%m-%d') if fmt else time
+
+    def __init__(
+            self,
+            uid: str = '',
+            lang: str = 'zh-cn',
+            region: str = '',
+            multi_uid: bool = False,
+            multi_region: bool = False,
+    ):
+        """
+        面向单个玩家的祈愿记录操作类。
+
+        :param uid: 玩家在原神中的账号号码，或自定义的唯一标识符。空字符串也作为一种标识符。
+        :param lang: 祈愿记录的语言文字。默认为``zh-cn``。
+        :param region: 游戏客户端所在地区。空字符串也作为一个独立地区。
+        :param multi_uid: 是否允许合并不同玩家的祈愿记录。
+        :param multi_region: 是否允许合并不同地区的祈愿记录。
+        """
+        self.wish = _WishesStruct()
+        """所有祈愿卡池。"""
+
+        self.uid = uid
+        self.region = region
+        self.language = lang
+        self.multi_uid = multi_uid
+        self.multi_region = multi_region
+
+    def __iadd__(self, other):
+        ot = type(other)
+        if ot is not self.__class__:
+            raise TypeError(
+                '仅支持与 %s 类型相加，而提供的是 %s' % (
+                    self.__class__.__name__, ot.__name__,
+                )
+            )
+        if self.uid != other.uid:
+            if self.multi_uid is False:
+                raise MultiPlayerException(self.uid, other.uid)
+            self.uid = other.uid
+        if self.region != other.region:
+            if self.multi_region is False:
+                raise MultiRegionException(self.region, other.region)
+            self.region = other.region
+
+        for i in range(len(self.wish)):
+            self.wish[i] += other.wish[i]
+
+        return self
+
+    def dump(self, file, encoding: str = 'UTF-8'):
+        pass
+
+    def load(self, file, encoding: str = 'UTF-8'):
+        pass
