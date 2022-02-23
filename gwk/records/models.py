@@ -63,8 +63,7 @@ class Wish(list):
         """祈愿保底次数（抽出五星金色品质的最大抽取次数）。"""
 
     def __repr__(self) -> str:
-        return '<%s(%s) %s，历史记录：%d，语言文字：%s>' % (
-            self.__class__.__name__,
+        return '<Wish(%s) %s，历史记录：%d，语言文字：%s>' % (
             self.wish_type, self.wish_type.label,
             len(self), self.language,
         )
