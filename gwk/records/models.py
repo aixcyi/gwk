@@ -63,7 +63,8 @@ class Wish(list):
 
     def __repr__(self) -> str:
         return '<%s(%s) %s，历史记录：%d，语言文字：%s>' % (
-            self.__class__.__name__, self.wish_type, self.wish_type.label,
+            self.__class__.__name__,
+            self.wish_type, self.wish_type.label,
             len(self), self.language,
         )
 
@@ -115,7 +116,7 @@ class Wish(list):
         - ``self.uid``
         - ``self.language``
         """
-        if self.__len__() > 0:
+        if len(self) > 0:
             try:
                 self._uid_ = self[0]['uid']
                 self._lang_ = self[0]['lang']
