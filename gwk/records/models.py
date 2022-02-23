@@ -61,12 +61,6 @@ class Wish(list):
         self.CEILING = CEILINGS[wish_type]
         """祈愿保底次数（抽出五星金色品质的最大抽取次数）。"""
 
-        self.language: str = 'zh-cn'
-        """祈愿历史记录的语言文字。"""
-
-        self.uid: str = ''
-        """玩家在原神中的账号号码，或自定义的唯一标识符。"""
-
     def __repr__(self) -> str:
         return '<%s(%s) %s，历史记录：%d，语言文字：%s>' % (
             self.__class__.__name__, self.wish_type, self.wish_type.label,
@@ -77,6 +71,16 @@ class Wish(list):
         if type(o) is not self.__class__:
             return False
         return o.wish_type == self.wish_type
+
+    @property
+    def uid(self) -> str:
+        """玩家在原神中的账号号码。"""
+        return self._uid_ if hasattr(self, '_uid_') else ''
+
+    @property
+    def language(self) -> str:
+        """祈愿历史记录的语言文字。"""
+        return self._lang_ if hasattr(self, '_lang_') else ''
 
     def sort(self, key=lambda r: (r['time'], r['id']), reverse: bool = False):
         """
@@ -104,6 +108,16 @@ class Wish(list):
         self.clear()
         self.insert(0, records)
 
+    def touch(self):
+        """
+        根据祈愿记录获取相关信息，并填充到以下属性：
 
-class Player:
-    pass
+        - ``self.uid``
+        - ``self.language``
+        """
+        if self.__len__() > 0:
+            try:
+                self._uid_ = self[0]['uid']
+                self._lang_ = self[0]['lang']
+            except IndexError:
+                pass
