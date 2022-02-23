@@ -117,12 +117,11 @@ class Wish(list):
         - ``self.uid``
         - ``self.language``
         """
-        if len(self) > 0:
-            try:
-                self._uid_ = self[0]['uid']
-                self._lang_ = self[0]['lang']
-            except IndexError:
-                pass
+        try:
+            self._uid_ = self[0]['uid']
+            self._lang_ = self[0]['lang']
+        except (IndexError, KeyError):
+            pass
 
 
 class _WishesStruct:
