@@ -164,7 +164,7 @@ class Player:
         :return: 返回一个datetime或str，表示可能获取到的最早的记录的日期。
         """
         time = datetime.now() - timedelta(days=6 * 30 - 1)
-        return time.strftime('%Y-%m-%d') if fmt else time
+        return time.strftime(fmt) if fmt else time
 
     def __init__(
             self,
