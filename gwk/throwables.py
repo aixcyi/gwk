@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
 
+__all__ = [
+    'GWKException',
+    'LogfileNotFound',
+    'AuthNotFound',
+    'AuthNotAvailable',
+    'MultiPlayerException',
+    'MultiRegionException',
+    'RawRespDecodeError',
+    'RawRespTypeError',
+]
+
+
 class GWKException(Exception):
     def __init__(self, message: str):
         self.message = message
