@@ -23,7 +23,7 @@ class AuthNotFound(GWKException):
 
 class AuthNotAvailable(GWKException):
     def __init__(self, context: str):
-        super().__init__('鉴权测试失败。' + context)
+        super().__init__('测试失败，鉴权信息不可用。' + context)
 
 
 class MultiPlayerException(GWKException):

@@ -27,10 +27,10 @@ class GenshinResponse:
             self.retcode: int = content['retcode']
             self.message: str = content['message']
             self.data: Any = content['data']
-        except ValueError:
-            raise RawRespDecodeError()
+        except ValueError as e:
+            raise RawRespDecodeError() from e
         except KeyError as e:
-            raise RawRespTypeError(e.args[0])
+            raise RawRespTypeError(e.args[0]) from e
 
 
 class RawCollector:

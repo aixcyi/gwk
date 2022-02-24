@@ -69,7 +69,7 @@ def extract_auths(logfile: str, encoding: str = 'UTF-8') -> dict:
         with open(logfile, 'r', encoding=encoding) as f:
             lines = f.readlines()[::-1]
     except FileNotFoundError as e:
-        raise LogfileNotFound(e.filename)
+        raise LogfileNotFound(e.filename) from e
 
     line_prefix = 'OnGetWebViewPageFinish:'
     for line in lines:
