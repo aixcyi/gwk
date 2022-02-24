@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-class GWorkException(Exception):
+class GWKException(Exception):
     def __init__(self, message: str):
         self.message = message
 
@@ -8,12 +8,12 @@ class GWorkException(Exception):
         return self.message
 
 
-class LogfileNotFound(GWorkException):
+class LogfileNotFound(GWKException):
     def __init__(self, file: str):
         super().__init__('找不到原神客户端日志文件。' + file)
 
 
-class AuthNotFound(GWorkException):
+class AuthNotFound(GWKException):
     def __init__(self):
         super().__init__(
             '在日志文件中找不到鉴权信息。'
@@ -21,12 +21,12 @@ class AuthNotFound(GWorkException):
         )
 
 
-class AuthNotAvailable(GWorkException):
+class AuthNotAvailable(GWKException):
     def __init__(self, context: str):
         super().__init__('鉴权测试失败。' + context)
 
 
-class MultiPlayerException(GWorkException):
+class MultiPlayerException(GWKException):
     def __init__(self, uid_master: str, uid_other: str):
         super().__init__(
             f'如需合并uid为 {uid_master} 与 {uid_other} 的两份祈愿记录，'
@@ -34,7 +34,7 @@ class MultiPlayerException(GWorkException):
         )
 
 
-class MultiRegionException(GWorkException):
+class MultiRegionException(GWKException):
     def __init__(self, region_master: str, region_other: str):
         super().__init__(
             f'如需合并地区为 {region_master} 与 {region_other} 的两份祈愿记录，'
