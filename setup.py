@@ -7,7 +7,7 @@ setup(
     name='gwk',
     description='Genshin Wish Kit',
     version='1.0.0',
-    license='MIT',
+    license='BSD-3-Clause',
     author='aixcyi',
     author_email='aixcyi@simple.com',
     long_description=long_description,
@@ -23,7 +23,7 @@ setup(
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
     ],
 )
