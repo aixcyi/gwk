@@ -2,15 +2,19 @@
 
 __all__ = [
     'Wish',
+    'Player',
     'map_raw_to_uigf_j2',
     'map_raw_to_basic',
 ]
 
+import json
 from datetime import datetime, timedelta
-from typing import Callable, Union
+from typing import Callable, Union, IO
 
 from gwk.constants import *
-from gwk.throwables import MultiPlayerException, MultiRegionException
+from gwk.throwables import (
+    MultiPlayerException, MultiRegionException, UnsupportedStruct
+)
 
 
 def map_raw_to_uigf_j2(record: dict) -> dict:
@@ -44,7 +48,7 @@ def map_fix_time(record: dict) -> dict:
     - 已有的 ``time`` 字段值将会被覆盖。
     """
     dt_obj = datetime.fromtimestamp(int(record['id'][:10]))
-    record['time'] = dt_obj.strftime(TF_RECORD_HMS)
+    record['time'] = dt_obj.strftime(UNIFORM_TIME_FORMAT)
     return record
 
 
@@ -183,7 +187,7 @@ class Player:
         :param multi_uid: 是否允许合并不同玩家的祈愿记录。
         :param multi_region: 是否允许合并不同地区的祈愿记录。
         """
-        self.wish = _WishesStruct()
+        self.wishes = _WishesStruct()
         """所有祈愿卡池。"""
 
         self.uid = uid
@@ -208,14 +212,57 @@ class Player:
             if self.multi_region is False:
                 raise MultiRegionException(self.region, other.region)
             self.region = other.region
-
-        for i in range(len(self.wish)):
-            self.wish[i] += other.wish[i]
-
+        for i in range(len(self.wishes)):
+            self.wishes[i] += other.wishes[i]
         return self
 
-    def dump(self, file, encoding: str = 'UTF-8'):
-        pass
+    def dump(self, struct: JsonStruct, fp: IO = None):
+        """
+        将所有卡池的祈愿记录导出为dict，或导出到JSON文件。
 
-    def load(self, file, encoding: str = 'UTF-8'):
+        :param struct: 导出格式。
+        :param fp: 文件对象。
+        :return: 当不提供fp时返回一个dict，其余时候不返回。
+        """
+        from gwk import UIGF_APP_NAME, UIGF_APP_VERSION, UIGF_VERSION
+
+        export_at = datetime.now()
+        content = {
+            "info": {
+                "uid": self.uid,
+                "lang": self.language,
+                "export_time": export_at.strftime(UNIFORM_TIME_FORMAT),
+                "export_timestamp": export_at.timestamp(),
+                "export_app": UIGF_APP_NAME,
+                "export_app_version": UIGF_APP_VERSION,
+                "uigf_version": UIGF_VERSION,
+            },
+        }
+        if struct == JsonStruct.UIGF:
+            content['list'] = self._dump_as_uigf()
+        elif struct == JsonStruct.GWK:
+            content['records'] = self._dump_as_gwk()
+        else:
+            raise UnsupportedStruct(struct.name)
+        if not fp:
+            return content
+        json.dump(
+            content, fp, ensure_ascii=False,
+            indent=None, separators=(',', ':')
+        )
+        return None
+
+    def _dump_as_uigf(self):
+        records = []
+        for wish in self.wishes:
+            records += list(wish)
+        return records
+
+    def _dump_as_gwk(self):
+        return {
+            wish.wish_type: list(wish)
+            for wish in self.wishes
+        }
+
+    def load(self, struct: JsonStruct, fp: IO):
         pass

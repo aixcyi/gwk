@@ -2,13 +2,15 @@
 
 __all__ = [
     'WishType',
+    'JsonStruct',
     'CEILINGS',
-    'TF_RECORD_HMS',
+    'UNIFORM_TIME_FORMAT',
     'DT_STAMP_OFFSET_CHANGE',
     'DT_VERSION_START_2_3',
 ]
 
 from datetime import datetime
+from enum import Enum
 
 from gwk.typing import Choices
 
@@ -23,6 +25,13 @@ class WishType(Choices):
     # CHARACTER_EVENT_WISH_2 = '400', '角色活动祈愿-2'
 
 
+class JsonStruct(Enum):
+    """导出的祈愿记录JSON文件的格式。"""
+
+    GWK = 'GWK'
+    UIGF = 'UIGF'
+
+
 CEILINGS = {
     WishType.BEGINNERS_WISH: 90,  # 新手祈愿
     WishType.WANDERLUST_INVOCATION: 90,  # 常驻祈愿
@@ -31,9 +40,8 @@ CEILINGS = {
     # WishType.CHARACTER_EVENT_WISH_2: 90,  # 角色活动祈愿-2
 }
 
-
 # Time Format
-TF_RECORD_HMS = '%Y-%m-%d %H:%M:%S'
+UNIFORM_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 # Datetime
 DT_STAMP_OFFSET_CHANGE = datetime(2020, 12, 31)

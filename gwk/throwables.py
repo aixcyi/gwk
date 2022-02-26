@@ -7,6 +7,7 @@ __all__ = [
     'AuthNotAvailable',
     'MultiPlayerException',
     'MultiRegionException',
+    'UnsupportedStruct',
     'RawRespDecodeError',
     'RawRespTypeError',
 ]
@@ -51,6 +52,13 @@ class MultiRegionException(GWKException):
         super().__init__(
             f'如需合并地区为 {region_master} 与 {region_other} 的两份祈愿记录，'
             '请将 multi_region 设为 True 。'
+        )
+
+
+class UnsupportedStruct(GWKException):
+    def __init__(self, struct):
+        super().__init__(
+            f'不支持导入导出名为 {struct} 的结构的祈愿记录。'
         )
 
 

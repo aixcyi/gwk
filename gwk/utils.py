@@ -99,7 +99,7 @@ def fit_id(time: str, offset: int, uid: int) -> str:
     :param uid: 玩家账号号码。
     :return: 19位纯数字组成的字符串。
     """
-    wish_time = datetime.strptime(time, TF_RECORD_HMS)
+    wish_time = datetime.strptime(time, UNIFORM_TIME_FORMAT)
     tt = list(wish_time.timetuple())
     if wish_time <= DT_STAMP_OFFSET_CHANGE:
         tt[4], tt[5] = 0, 0
@@ -125,7 +125,7 @@ def make_id(time: str, generator: int, player: int, offset: int = 0) -> str:
     :param offset: 偏移量。用于当祈愿时间相同时生成不同的ID，取值范围为[0,15]。
     :return: 19位纯数字组成的字符串。
     """
-    wish_time = datetime.strptime(time, TF_RECORD_HMS)
+    wish_time = datetime.strptime(time, UNIFORM_TIME_FORMAT)
     wish_stamp = int(wish_time.timestamp())
     return str(
         (0x7FFFFFFFC0000000 & wish_stamp << 30) +
