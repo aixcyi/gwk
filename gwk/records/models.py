@@ -54,10 +54,10 @@ def map_fix_time(record: dict) -> dict:
 
 class Wish(list):
     """
-    祈愿卡池历史记录。
+    单个祈愿卡池。
     """
 
-    def __init__(self, wish_type: WishType):
+    def __init__(self, wish_type: WishType = None):
         super().__init__()
 
         self.wish_type = wish_type
@@ -67,10 +67,15 @@ class Wish(list):
         """祈愿保底次数（抽出五星金色品质的最大抽取次数）。"""
 
     def __repr__(self) -> str:
-        return '<Wish(%s) %s，历史记录：%d，语言文字：%s>' % (
-            self.wish_type, self.wish_type.label,
-            len(self), self.language,
-        )
+        if self.wish_type:
+            return '<Wish(%s) %s，记录数量：%d，语言文字：%s>' % (
+                self.wish_type, self.wish_type.label,
+                len(self), self.language,
+            )
+        else:
+            return '<Wish(*) 记录数量：%d，语言文字：%s>' % (
+                len(self), self.language,
+            )
 
     def __eq__(self, o) -> bool:
         if type(o) is not self.__class__:
@@ -128,32 +133,38 @@ class Wish(list):
 
 
 class _WishesStruct:
-    def __init__(self):
-        self.beginner = Wish(WishType.BEGINNERS_WISH)
-        """新手祈愿。"""
+    def __init__(self, string: bool = False):
+        if string:
+            self.wish = Wish()
+            """所有祈愿记录。"""
 
-        self.wanderlust = Wish(WishType.WANDERLUST_INVOCATION)
-        """常驻祈愿。"""
+            self._list = [self.wish]
+        else:
+            self.beginner = Wish(WishType.BEGINNERS_WISH)
+            """新手祈愿卡池。"""
 
-        self.character = Wish(WishType.CHARACTER_EVENT_WISH)
-        """角色祈愿、角色祈愿-2。"""
+            self.wanderlust = Wish(WishType.WANDERLUST_INVOCATION)
+            """常驻祈愿卡池。"""
 
-        self.weapon = Wish(WishType.WEAPON_EVENT_WISH)
-        """武器祈愿。"""
+            self.character = Wish(WishType.CHARACTER_EVENT_WISH)
+            """角色祈愿卡池、角色祈愿-2卡池。"""
 
-        self._iter = [
-            self.beginner, self.wanderlust,
-            self.character, self.weapon,
-        ]
+            self.weapon = Wish(WishType.WEAPON_EVENT_WISH)
+            """武器祈愿卡池。"""
+
+            self._list = [
+                self.beginner, self.wanderlust,
+                self.character, self.weapon,
+            ]
 
     def __iter__(self):
-        return self._iter
+        return self._list
 
     def __len__(self):
-        return len(self._iter)
+        return len(self._list)
 
-    def __getitem__(self, index):
-        return self._iter[index]
+    def __getitem__(self, index) -> Wish:
+        return self._list[index]
 
 
 class Player:
@@ -275,3 +286,11 @@ class Player:
 
     def load(self, struct: JsonStruct, fp: IO):
         pass
+
+
+class PlayerPool(Player):
+    pass
+
+
+class PlayerShelf(Player):
+    pass
