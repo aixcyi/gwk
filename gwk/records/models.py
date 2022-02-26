@@ -212,9 +212,18 @@ class Player:
             if self.multi_region is False:
                 raise MultiRegionException(self.region, other.region)
             self.region = other.region
+        if not other.nonempty():
+            return self
         for i in range(len(self.wishes)):
             self.wishes[i] += other.wishes[i]
+            self.wishes[i].touch()
         return self
+
+    def nonempty(self) -> bool:
+        """但凡有一条祈愿记录都会返回``True``，否则返回``False``。"""
+        return any([len(wish) for wish in self.wishes])
+
+    __bool__ = nonempty
 
     def dump(self, struct: JsonStruct, fp: IO = None):
         """
