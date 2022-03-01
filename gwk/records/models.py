@@ -7,13 +7,14 @@ __all__ = [
     'map_raw_to_basic',
 ]
 
+import abc
 import json
 from datetime import datetime, timedelta
 from typing import Callable, Union, IO
 
 from gwk.constants import *
 from gwk.throwables import (
-    MultiPlayerException, MultiRegionException, UnsupportedStruct
+    MultiPlayerException, MultiRegionException
 )
 
 
@@ -167,7 +168,8 @@ class _WishesStruct:
         return self._list[index]
 
 
-class Player:
+class Player(abc.ABC):
+    """面向单个玩家的祈愿记录操作类。"""
 
     @staticmethod
     def earliest(fmt: str = '%Y-%m-%d') -> Union[str, datetime]:
@@ -190,17 +192,12 @@ class Player:
             multi_region: bool = False,
     ):
         """
-        面向单个玩家的祈愿记录操作类。
-
         :param uid: 玩家在原神中的账号号码，或自定义的唯一标识符。空字符串也作为一种标识符。
         :param lang: 祈愿记录的语言文字。默认为``zh-cn``。
         :param region: 游戏客户端所在地区。空字符串也作为一个独立地区。
         :param multi_uid: 是否允许合并不同玩家的祈愿记录。
         :param multi_region: 是否允许合并不同地区的祈愿记录。
         """
-        self.wishes = _WishesStruct()
-        """所有祈愿卡池。"""
-
         self.uid = uid
         self.region = region
         self.language = lang
@@ -223,6 +220,88 @@ class Player:
             if self.multi_region is False:
                 raise MultiRegionException(self.region, other.region)
             self.region = other.region
+        return self
+
+    @abc.abstractmethod
+    def __bool__(self) -> bool:
+        pass
+
+    @abc.abstractmethod
+    def nonempty(self) -> bool:
+        pass
+
+    @abc.abstractmethod
+    def dump(self, fp: IO = None):
+        pass
+
+    @abc.abstractmethod
+    def load(self, fp: IO = None):
+        pass
+
+
+class PlayerPool(Player):
+    """面向单个玩家的单卡池祈愿记录操作类。"""
+
+    wishes = _WishesStruct(True)
+
+    def __iadd__(self, other):
+        super(PlayerPool, self).__iadd__(other)
+        if not other.nonempty():
+            return self
+        self.wishes[0] += other.wishes[0]
+        self.wishes[0].touch()
+        return self
+
+    def nonempty(self) -> bool:
+        """但凡有一条祈愿记录都会返回``True``，否则返回``False``。"""
+        return len(self.wishes[0]) > 0
+
+    __bool__ = nonempty
+
+    def dump(self, fp: IO = None):
+        """
+        将所有卡池的祈愿记录导出为dict，或导出到JSON文件。
+
+        :param fp: 文件对象。
+        :return: 当不提供fp时返回一个dict，其余时候不返回。
+        """
+        from gwk import UIGF_APP_NAME, UIGF_APP_VERSION, UIGF_VERSION
+
+        export_at = datetime.now()
+        content = {
+            "info": {
+                "uid": self.uid,
+                "lang": self.language,
+                "export_time": export_at.strftime(UNIFORM_TIME_FORMAT),
+                "export_timestamp": export_at.timestamp(),
+                "export_app": UIGF_APP_NAME,
+                "export_app_version": UIGF_APP_VERSION,
+                "uigf_version": UIGF_VERSION,
+            },
+            "records": {
+                wish.wish_type: list(wish) for wish in self.wishes
+            }
+        }
+        if not fp:
+            return content
+        json.dump(
+            content, fp, ensure_ascii=False,
+            indent=None, separators=(',', ':')
+        )
+        return None
+
+    def load(self, fp: IO = None):
+        # TODO: 载入单卡池祈愿记录
+        return None
+
+
+class PlayerShelf(Player):
+    """面向单个玩家的多卡池祈愿记录操作类。"""
+
+    wishes = _WishesStruct(False)
+
+    def __iadd__(self, other):
+        super(PlayerShelf, self).__iadd__(other)
         if not other.nonempty():
             return self
         for i in range(len(self.wishes)):
@@ -236,11 +315,10 @@ class Player:
 
     __bool__ = nonempty
 
-    def dump(self, struct: JsonStruct, fp: IO = None):
+    def dump(self, fp: IO = None):
         """
         将所有卡池的祈愿记录导出为dict，或导出到JSON文件。
 
-        :param struct: 导出格式。
         :param fp: 文件对象。
         :return: 当不提供fp时返回一个dict，其余时候不返回。
         """
@@ -258,12 +336,8 @@ class Player:
                 "uigf_version": UIGF_VERSION,
             },
         }
-        if struct == JsonStruct.UIGF:
-            content['list'] = self._dump_as_uigf()
-        elif struct == JsonStruct.GWK:
-            content['records'] = self._dump_as_gwk()
-        else:
-            raise UnsupportedStruct(struct.name)
+        for wish in self.wishes:
+            content['list'] += list(wish)
         if not fp:
             return content
         json.dump(
@@ -272,25 +346,6 @@ class Player:
         )
         return None
 
-    def _dump_as_uigf(self):
-        records = []
-        for wish in self.wishes:
-            records += list(wish)
-        return records
-
-    def _dump_as_gwk(self):
-        return {
-            wish.wish_type: list(wish)
-            for wish in self.wishes
-        }
-
-    def load(self, struct: JsonStruct, fp: IO):
+    def load(self, fp: IO = None):
+        # TODO: 载入多卡池祈愿记录
         pass
-
-
-class PlayerPool(Player):
-    pass
-
-
-class PlayerShelf(Player):
-    pass
