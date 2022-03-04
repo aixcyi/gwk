@@ -1,6 +1,2 @@
-from gwk.records.models import (
-    Wish, Player
-)
-from gwk.records.wrappers import (
-    GenshinResponse, RawCollector
-)
+from gwk.records.models import *
+from gwk.records.wrappers import *

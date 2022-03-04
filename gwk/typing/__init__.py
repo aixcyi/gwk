@@ -17,7 +17,7 @@ class ChoicesMeta(enum.EnumMeta):
                     isinstance(value[-1], str)
             ):
                 *value, label = value
-                value = tuple(value)
+                value = tuple(value) if len(value) > 1 else value[0]
             else:
                 label = key.replace('_', ' ').title()
             labels.append(label)
