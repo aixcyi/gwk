@@ -9,8 +9,9 @@ __all__ = [
     'make_id',
 ]
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from os.path import isfile, expanduser, join
+from typing import Union
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 from gwk.constants import *
@@ -133,3 +134,15 @@ def make_id(time: str, generator: int, player: int, offset: int = 0) -> str:
         (0x000000000000FFF0 & player << 4) +
         (0x000000000000000F & offset)
     )
+
+
+def earliest(fmt: str = '%Y-%m-%d') -> Union[str, datetime]:
+    """
+    原神只能获取最近六个月的祈愿历史记录。
+    此方法用于计算最早可以获取到哪天的祈愿记录。
+
+    :param fmt: 日期时间的字符串格式。若为None，则直接返回datetime对象。
+    :return: 返回一个datetime或str，表示可能获取到的最早的记录的日期。
+    """
+    time = datetime.now() - timedelta(days=6 * 30 - 1)
+    return time.strftime(fmt) if fmt else time
