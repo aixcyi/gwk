@@ -88,19 +88,24 @@ class Wish:
             pass
 
     def all(self) -> list:
-        """获取所有祈愿记录。"""
-        return self._records
+        """
+        获取所有祈愿记录。
+        """
+        return self._records.copy()
 
     def set(self, records: list):
         """
         用一份新的祈愿记录覆盖到祈愿卡池中。
         注意：此方法不会检验卡池的祈愿类型跟记录是否匹配。
         """
-        self._records = records
+        self._records.clear()
+        self._records = records.copy()
         self._touch()
 
     def clear(self):
-        """清除卡池中的所有祈愿记录。"""
+        """
+        清除卡池中的所有祈愿记录。
+        """
         self._records.clear()
 
     def sort(
@@ -132,7 +137,8 @@ class Wish:
         :param mapping: 映射函数。其应当有且仅有一个参数和返回值，
                         负责单一一条记录的字段结构更改。
         """
-        self.set(list(map(mapping, self._records)))
+        self._records = list(map(mapping, self._records))
+        self._touch()
 
 
 def map_raw_to_uigf_j2(record: dict) -> dict:
