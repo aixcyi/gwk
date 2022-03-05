@@ -126,7 +126,7 @@ class Wish(list):
         """
         records = list(map(mapping, self))
         self.clear()
-        self.insert(0, records)
+        self.__iadd__(records)
 
 
 class Player(abc.ABC):
