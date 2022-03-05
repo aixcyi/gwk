@@ -62,9 +62,6 @@ class Wish:
     def __len__(self) -> int:
         return len(self._records)
 
-    def __iter__(self):
-        return self._records
-
     def __iadd__(self, o):
         if isinstance(o, list):
             self._records += o
@@ -243,7 +240,7 @@ class PlayerPool:
                 "export_app_version": UIGF_APP_VERSION,
                 "uigf_version": UIGF_VERSION,
             },
-            "list": list(self.wish),
+            "list": self.wish.all(),
         }
         if not fp:
             return content
@@ -393,7 +390,7 @@ class PlayerShelf:
                 "uigf_version": UIGF_VERSION,
             },
             "records": {
-                k.value: list(self._wishes[k])
+                k.value: self._wishes[k].all()
                 for k in self._wishes
             }
         }
