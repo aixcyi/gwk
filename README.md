@@ -1,25 +1,35 @@
 <h1 style="text-align: center"><span style="color: #00a2e8">G</span>enshin <span style="color: #00a2e8">W</span>ish <span style="color: #00a2e8">K</span>it</h1>
 
 
-原神祈愿卡池开发套件。
+原神祈愿卡池开发套件（Python Package）。
 
 ## 特性／Features
 
 - [x] 获取祈愿历史记录，而无需验证或密码（仅需手动登陆原神PC客户端）。
 - [x] 在数据处理上兼容原始格式、基本格式、[UIGF格式](https://github.com/DGP-Studio/Snap.Genshin/wiki/StandardFormat)，简单重写映射器即可支持更多自定义格式。
-- [x] 导入缺失`id`的祈愿历史记录时会自动补全，支持拟合id及自定义高编码空间的id。
+- [x] 导入缺失`id`的祈愿历史记录时会自动补全，支持拟合原始id及生成高编码空间的自定义id。
 - [ ] 支持按卡池和按玩家两种方式处理及合并祈愿历史记录。
 - [ ] 支持导出JSON文件以及多种格式的Excel文件。
 
-## 开源协议／License
+## 安装／Installation
 
-- 本项目：BSD 3-Clause
-- [Django](https://github.com/django/django/tree/stable/3.2.x)：BSD 3-Clause
-  - [`django.db.models.enums.ChoicesMeta`](https://github.com/django/django/blob/stable/3.2.x/django/db/models/enums.py) -> `gwk.typing.ChoicesMeta`
-  - [`django.db.models.enums.Choices`](https://github.com/django/django/blob/stable/3.2.x/django/db/models/enums.py) -> `gwk.typing.Choices`
+~~通过pip进行安装：`pip install gwk`~~
+
+还在完善，暂未编译……╮(╯▽╰)╭
+
+## 用法／Usage
+
+见源码根目录中的`tests`文件夹。
+
+## 许可证／License
+
+- 本项目：BSD-3-Clause
+- [Django](https://github.com/django/django/tree/stable/3.2.x)：BSD-3-Clause
+  - [`django.db.models.enums.ChoicesMeta`](https://github.com/django/django/blob/stable/3.2.x/django/db/models/enums.py#L8) -> `gwk.typing.ChoicesMeta`
+  - [`django.db.models.enums.Choices`](https://github.com/django/django/blob/stable/3.2.x/django/db/models/enums.py#L62) -> `gwk.typing.Choices`
 
 
-## 参考／References
+## 参考／Information
 
 ### page
 
@@ -65,7 +75,7 @@
     "item_type": "武器",
     "rank_type": "3",
     "id": "1600099200004770203",
-    "uigf_gacha_type": "000",
+    "uigf_gacha_type": "000"
 }
 ```
 
