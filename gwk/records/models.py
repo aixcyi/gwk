@@ -245,7 +245,7 @@ class PlayerPool:
             },
             "list": list(self.wish),
         }
-        if fp:
+        if not fp:
             return content
         json.dump(
             content, fp, ensure_ascii=False,
