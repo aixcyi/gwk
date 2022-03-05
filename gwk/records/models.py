@@ -19,6 +19,117 @@ from gwk.constants import *
 from gwk.throwables import *
 
 
+class Wish:
+
+    @property
+    def uid(self) -> str:
+        """玩家在原神中的账号号码。"""
+        return self._uid_ if hasattr(self, '_uid_') else ''
+
+    @property
+    def language(self) -> str:
+        """祈愿历史记录的语言文字。"""
+        return self._lang_ if hasattr(self, '_lang_') else ''
+
+    def __init__(self, wish_type: WishType = None):
+        """
+        祈愿卡池。包含单个祈愿卡池的所有祈愿记录。
+
+        :param wish_type: 卡池类型。
+        """
+        self._records = list()
+
+        self.wish_type = wish_type
+        """祈愿卡池类型。"""
+
+        self.CEILING = CEILINGS[wish_type] if wish_type else 0
+        """祈愿保底次数（抽出五星金色品质的最大抽取次数）。"""
+
+    def __repr__(self) -> str:
+        if self.wish_type:
+            return '<Wish(%s) %s，记录数量：%d，语言文字：%s>' % (
+                self.wish_type, self.wish_type.label,
+                len(self._records), self.language,
+            )
+        else:
+            return '<Wish(*) 记录数量：%d，语言文字：%s>' % (
+                len(self._records), self.language,
+            )
+
+    def __eq__(self, o) -> bool:
+        if type(o) is not self.__class__:
+            return False
+        return o.wish_type == self.wish_type
+
+    def __iadd__(self, o):
+        if isinstance(o, list):
+            self._records += o
+        elif isinstance(o, self.__class__):
+            if o.wish_type != self.wish_type:
+                raise TypeError(
+                    f'{self.wish_type} 类型的祈愿卡池记录'
+                    f'不能与 {o.wish_type} 类型的合并。'
+                )
+            self._records += o.all()
+        else:
+            raise TypeError(
+                f'{self.__class__.__name__} 类型'
+                f'不能与 {type(o).__name__} 相加。'
+            )
+        self._touch()
+        return self
+
+    def _touch(self):
+        try:
+            self._uid_ = self._records[0]['uid']
+            self._lang_ = self._records[0]['lang']
+        except (IndexError, KeyError):
+            pass
+
+    def all(self) -> list:
+        """获取所有祈愿记录。"""
+        return self._records
+
+    def set(self, records: list):
+        """
+        用一份新的祈愿记录覆盖到祈愿卡池中。
+        注意：此方法不会检验卡池的祈愿类型跟记录是否匹配。
+        """
+        self._records = records
+        self._touch()
+
+    def sort(
+            self, *,
+            key=lambda r: (r['time'], r['id']),
+            reverse: bool = False
+    ):
+        """
+        对祈愿历史记录排序，然后去除重复项。
+
+        - 使用 ``id`` 字段鉴别重复记录。如果其字段值相同，将会直接判定为重复并清除。
+        - 默认的排序依据为 ``time``、``id`` 两个字段。
+
+        :param key: 排序依据。
+        :param reverse: 是否倒序排列。
+        """
+        self._records.sort(key=key, reverse=reverse)
+        for i in range(len(self._records) - 1, 0, -1):
+            # 注意range的区间是 (0, __len__]
+            last_id = self._records[i - 1]['id']
+            curr_id = self._records[i]['id']
+            if last_id == curr_id:
+                self._records.pop(i)
+
+    def maps(self, mapping: Callable):
+        """
+        更改每一条祈愿历史记录的字段结构。
+
+        :param mapping: 映射函数。其应当有且仅有一个参数和返回值，
+                        负责单一一条记录的字段结构更改。
+        """
+        self.set(list(map(mapping, self._records)))
+
+
 def map_raw_to_uigf_j2(record: dict) -> dict:
     del record['uid']
     del record['lang']
@@ -52,81 +163,6 @@ def map_fix_time(record: dict) -> dict:
     dt_obj = datetime.fromtimestamp(int(record['id'][:10]))
     record['time'] = dt_obj.strftime(UNIFORM_TIME_FORMAT)
     return record
-
-
-class Wish(list):
-    """
-    单个祈愿卡池。
-    """
-
-    def __init__(self, wish_type: WishType = None):
-        super().__init__()
-
-        self.wish_type = wish_type
-        """祈愿卡池类型。"""
-
-        self.CEILING = CEILINGS[wish_type] if wish_type else 0
-        """祈愿保底次数（抽出五星金色品质的最大抽取次数）。"""
-
-    def __repr__(self) -> str:
-        if self.wish_type:
-            return '<Wish(%s) %s，记录数量：%d，语言文字：%s>' % (
-                self.wish_type, self.wish_type.label,
-                len(self), self.language,
-            )
-        else:
-            return '<Wish(*) 记录数量：%d，语言文字：%s>' % (
-                len(self), self.language,
-            )
-
-    def __eq__(self, o) -> bool:
-        if type(o) is not self.__class__:
-            return False
-        return o.wish_type == self.wish_type
-
-    def __iadd__(self, other):
-        super(Wish, self).__iadd__(other)
-        try:
-            self._uid_ = self[0]['uid']
-            self._lang_ = self[0]['lang']
-        except (IndexError, KeyError):
-            pass
-
-    @property
-    def uid(self) -> str:
-        """玩家在原神中的账号号码。"""
-        return self._uid_ if hasattr(self, '_uid_') else ''
-
-    @property
-    def language(self) -> str:
-        """祈愿历史记录的语言文字。"""
-        return self._lang_ if hasattr(self, '_lang_') else ''
-
-    def sort(self, key=lambda r: (r['time'], r['id']), reverse: bool = False):
-        """
-        对祈愿历史记录排序，然后去除重复项。
-
-        - 使用 ``id`` 字段鉴别重复记录。如果其字段值相同，将会直接判定为重复并清除。
-        - 默认的排序依据为 ``time``、``id`` 两个字段。
-
-        :param key: 排序依据。
-        :param reverse: 是否倒序排列。
-        """
-        super().sort(key=key, reverse=reverse)
-        for i in range(len(self) - 1, 0, -1):
-            # 注意range的区间是 (0, __len__]
-            if self[i]['id'] == self[i - 1]['id']:
-                self.pop(i)
-
-    def maps(self, mapping: Callable):
-        """
-        更改每一条祈愿历史记录的字段结构。
-
-        :param mapping: 映射函数。其应当有且仅有一个参数和返回值，负责单一一条记录的字段结构更改。
-        """
-        records = list(map(mapping, self))
-        self.clear()
-        self.__iadd__(records)
 
 
 class Player(abc.ABC):
