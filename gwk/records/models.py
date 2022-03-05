@@ -363,8 +363,9 @@ class PlayerShelf(Player):
                 self._wishes[wish_type] += content['records'][t]
         except ValueError as e:
             # e.args == ('300 is not a valid Type',)
+            # rpartition是为了预防value有空格的情况
             raise UnsupportedJsonStruct(
-                0x03, e.args[0].split(' ')[0]
+                0x03, e.args[0].rpartition(' is ')[0]
             ) from e
 
         # 返回未被使用的字段：
