@@ -351,10 +351,23 @@ class PlayerShelf:
         return self
 
     def __iter__(self):
-        """实现 for key in PlayerShelf() 语句。"""
+        """
+        实现允许使用 for 循环遍历所有卡池。
+
+        >>> shelf = PlayerShelf()
+        >>> for key in shelf:
+        >>>     wish_type: WishType = key
+        >>>     wish_obj: Wish = shelf[key]
+        """
         return iter(self._wishes)
 
     def __getitem__(self, key: Union[WishType, str, int]):
+        """
+        实现允许使用 WishType 取出卡池对象。
+
+        >>> shelf = PlayerShelf()
+        >>> wish: Wish = shelf[WishType.BEGINNERS_WISH]
+        """
         try:
             if key in self._wishes:
                 return self._wishes[key]
