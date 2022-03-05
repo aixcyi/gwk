@@ -313,6 +313,21 @@ class PlayerShelf(Player):
         self.weapon_wish += other.weapon_wish
         return self
 
+    def __iter__(self):
+        """实现 for key in PlayerShelf() 语句。"""
+        return iter(self._wishes)
+
+    def __getitem__(self, key: Union[WishType, str, int]):
+        try:
+            if key in self._wishes:
+                return self._wishes[key]
+            k = WishType(str(key))
+            if k in self._wishes:
+                return self._wishes[k]
+        except ValueError:
+            pass
+        raise KeyError(key)
+
     def nonempty(self) -> bool:
         return any([len(self._wishes[k]) for k in self._wishes])
 
