@@ -77,13 +77,19 @@ class Wish:
                 f'{self.__class__.__name__} 类型'
                 f'不能与 {type(o).__name__} 相加。'
             )
-        self._touch()
+        self._pad()
         return self
 
-    def _touch(self):
+    def _pad(self):
+        """
+        用末尾的祈愿记录填充 Wish 的以下属性：
+
+        - uid
+        - language
+        """
         try:
-            self._uid_ = self._records[0]['uid']
-            self._lang_ = self._records[0]['lang']
+            self._uid_ = self._records[-1]['uid']
+            self._lang_ = self._records[-1]['lang']
         except (IndexError, KeyError):
             pass
 
@@ -100,7 +106,7 @@ class Wish:
         """
         self._records.clear()
         self._records = records.copy()
-        self._touch()
+        self._pad()
 
     def clear(self):
         """
@@ -138,7 +144,7 @@ class Wish:
                         负责单一一条记录的字段结构更改。
         """
         self._records = list(map(mapping, self._records))
-        self._touch()
+        self._pad()
 
 
 def map_raw_to_uigf_j2(record: dict) -> dict:
