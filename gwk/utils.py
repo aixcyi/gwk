@@ -12,7 +12,9 @@ __all__ = [
 from datetime import datetime, timedelta
 from os.path import isfile, expanduser, join
 from typing import Union
-from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+from urllib.parse import (
+    urlparse, parse_qs, urlencode, urlunparse
+)
 
 from gwk.constants import *
 from gwk.throwables import LogfileNotFound, AuthNotFound
@@ -67,7 +69,10 @@ def get_logfile() -> str:
     return ''
 
 
-def extract_auths(logfile: str, encoding: str = 'UTF-8') -> dict:
+def extract_auths(
+        logfile: str,
+        encoding: str = 'UTF-8'
+) -> dict:
     """
     从文件中提取鉴权信息。
 
@@ -96,7 +101,8 @@ def fit_id(time: str, offset: int, uid: int) -> str:
     祈愿历史记录ID拟合函数。（更贴近原始ID）
 
     :param time: 祈愿时间。字符串格式应为 "yyyy-MM-dd HH:mm:ss"
-    :param offset: 偏移量。用于当祈愿时间相同时生成不同的ID，取值范围为0到999,9999。
+    :param offset: 偏移量。用于当祈愿时间相同时生成不同的ID，
+                   取值范围为0到999,9999。
     :param uid: 玩家账号号码。
     :return: 19位纯数字组成的字符串。
     """
@@ -116,14 +122,21 @@ def fit_id(time: str, offset: int, uid: int) -> str:
     return left + right
 
 
-def make_id(time: str, generator: int, player: int, offset: int = 0) -> str:
+def make_id(
+        time: str,
+        generator: int,
+        player: int,
+        offset: int = 0
+) -> str:
     """
     高精度祈愿历史记录ID生成函数。（编码空间更大，墙裂推荐）
 
     :param time: 祈愿时间。字符串格式应为 "yyyy-MM-dd HH:mm:ss"
-    :param generator: 生成器标识。用于标记不同应用或中间件生成的ID。取值范围[0,16383]。
+    :param generator: 生成器标识。用于标记不同应用或中间件生成的ID。
+                    取值范围[0,16383]。
     :param player: 玩家标识。用于标记不同玩家。取值范围为[0,4095]。
-    :param offset: 偏移量。用于当祈愿时间相同时生成不同的ID，取值范围为[0,15]。
+    :param offset: 偏移量。用于当祈愿时间相同时生成不同的ID，
+                   取值范围为[0,15]。
     :return: 19位纯数字组成的字符串。
     """
     wish_time = datetime.strptime(time, UNIFORM_TIME_FORMAT)

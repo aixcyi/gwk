@@ -52,7 +52,9 @@ class RawCollector:
 
         :raise AuthNotAvailable: 鉴权信息不可用时抛出。
         """
-        resp = GenshinResponse(http_get(self.url, params=self.query))
+        resp = GenshinResponse(http_get(
+            self.url, params=self.query
+        ))
         if resp.retcode != 0:
             raise AuthNotAvailable(resp.message)
 
@@ -72,7 +74,8 @@ class RawCollector:
         :param page: 第几页祈愿历史，即页码偏移量。
         :param end_id: 最后一条祈愿历史的ID。初始值为 "0" 。
         :param callback: 回调函数。每下载完一页就会调用一次。
-                         一般用于延时和跟踪下载进度。参数声明同本方法（除回调函数参数外）。
+                         一般用于延时和跟踪下载进度。
+                         参数声明同本方法（除回调函数参数外）。
         :return: 经过JSON解析的HTTP响应正文，包含当前一页的所有祈愿历史。
         """
         self.query['size'] = str(size)
@@ -81,16 +84,22 @@ class RawCollector:
         self.query['end_id'] = end_id
         resp = GenshinResponse(http_get(self.url, self.query))
         if callable(callback):
-            callback(gacha_type, size=size, page=page, end_id=end_id)
+            callback(gacha_type, size=size,
+                     page=page, end_id=end_id)
         return resp.data
 
-    def get_wish(self, gacha_type: WishType, callback: Callable = None) -> List[dict]:
+    def get_wish(
+            self,
+            gacha_type: WishType,
+            callback: Callable = None
+    ) -> List[dict]:
         """
         下载一个卡池的所有祈愿历史。
 
         :param gacha_type: 祈愿卡池类型。
         :param callback: 回调函数。每下载完一页就会调用一次。
-                         一般用于延时和跟踪下载进度。参数声明见 ``get_page()`` 。
+                         一般用于延时和跟踪下载进度。
+                         参数声明见 ``get_page()`` 。
         :return: 包含零条或多条祈愿历史的列表。
         """
         page = 1
@@ -98,7 +107,8 @@ class RawCollector:
         results = []
         while True:
             result = self.get_page(
-                gacha_type, page=page, end_id=end_id, callback=callback
+                gacha_type, page=page,
+                end_id=end_id, callback=callback
             )
             if not result['list']:
                 break

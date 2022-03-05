@@ -29,8 +29,8 @@ class LogfileNotFound(GWKException):
 class AuthNotFound(GWKException):
     def __init__(self):
         super().__init__(
-            '在日志文件中找不到鉴权信息。'
-            '请尝试进入原神，打开祈愿面板，然后点击左下角的 “历史” 浏览一下。'
+            '在日志文件中找不到鉴权信息。请尝试进入原神，'
+            '打开祈愿面板，然后点击左下角的 “历史” 浏览一下。'
         )
 
 
@@ -42,16 +42,16 @@ class AuthNotAvailable(GWKException):
 class MultiPlayerException(GWKException):
     def __init__(self, uid_master: str, uid_other: str):
         super().__init__(
-            f'如需合并uid为 {uid_master} 与 {uid_other} 的两份祈愿记录，'
-            '请将 multi_uid 设为 True 。'
+            f'如需合并uid为 {uid_master} 与 {uid_other} 的'
+            '两份祈愿记录，请将 multi_uid 设为 True 。'
         )
 
 
 class MultiRegionException(GWKException):
     def __init__(self, region_master: str, region_other: str):
         super().__init__(
-            f'如需合并地区为 {region_master} 与 {region_other} 的两份祈愿记录，'
-            '请将 multi_region 设为 True 。'
+            f'如需合并地区为 {region_master} 与 {region_other} 的'
+            '两份祈愿记录，请将 multi_region 设为 True 。'
         )
 
 
@@ -61,7 +61,8 @@ class UnsupportedJsonStruct(GWKException):
             super().__init__({
                 0x01: ('仅支持导入导出 dict 类型的JSON文件，'
                        f'而当前的类型是 {context.__name__} 。'),
-                0x02: '导入的JSON文件缺少字段：' + '、'.join(context),
+                0x02: ('导入的JSON文件缺少字段：'
+                       + '、'.join(context)),
                 0x03: f'不能解析WishType为 {context} 的祈愿卡池。'
             }[err])
         except KeyError:

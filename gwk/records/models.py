@@ -392,7 +392,9 @@ class PlayerShelf:
 
     def nonempty(self) -> bool:
         """但凡有一条祈愿记录都会返回``True``，否则返回``False``。"""
-        return any([len(self._wishes[k]) for k in self._wishes])
+        return any([
+            len(self._wishes[k]) for k in self._wishes
+        ])
 
     __bool__ = nonempty
 
