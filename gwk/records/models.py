@@ -325,6 +325,26 @@ class PlayerShelf:
             ]
         }
 
+    def __len__(self) -> int:
+        return len(self._wishes)
+
+    def __getitem__(self, key: Union[WishType, str, int]):
+        """
+        实现允许使用 WishType 取出卡池对象。
+
+        >>> shelf = PlayerShelf()
+        >>> wish: Wish = shelf[WishType.BEGINNERS_WISH]
+        """
+        try:
+            if key in self._wishes:
+                return self._wishes[key]
+            k = WishType(str(key))
+            if k in self._wishes:
+                return self._wishes[k]
+        except ValueError:
+            pass
+        raise KeyError(key)
+
     def __iadd__(self, o):
         if not isinstance(o, self.__class__):
             raise TypeError(
@@ -350,23 +370,6 @@ class PlayerShelf:
         >>>     wish_obj: Wish = shelf[key]
         """
         return iter(self._wishes)
-
-    def __getitem__(self, key: Union[WishType, str, int]):
-        """
-        实现允许使用 WishType 取出卡池对象。
-
-        >>> shelf = PlayerShelf()
-        >>> wish: Wish = shelf[WishType.BEGINNERS_WISH]
-        """
-        try:
-            if key in self._wishes:
-                return self._wishes[key]
-            k = WishType(str(key))
-            if k in self._wishes:
-                return self._wishes[k]
-        except ValueError:
-            pass
-        raise KeyError(key)
 
     def nonempty(self) -> bool:
         """但凡有一条祈愿记录都会返回``True``，否则返回``False``。"""
