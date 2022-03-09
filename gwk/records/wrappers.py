@@ -11,6 +11,7 @@ from requests import Response
 from requests import get as http_get
 
 from gwk.constants import WishType
+from gwk.records import Wish
 from gwk.throwables import (
     AuthNotAvailable, RawRespDecodeError, RawRespTypeError
 )
@@ -92,7 +93,7 @@ class RawCollector:
             self,
             gacha_type: WishType,
             callback: Callable = None
-    ) -> List[dict]:
+    ) -> Wish:
         """
         下载一个卡池的所有祈愿历史。
 
@@ -102,17 +103,20 @@ class RawCollector:
                          参数声明见 ``get_page()`` 。
         :return: 包含零条或多条祈愿历史的列表。
         """
-        page = 1
+        page_offset = 1
         end_id = '0'
-        results = []
+        wish = Wish(gacha_type)
         while True:
-            result = self.get_page(
-                gacha_type, page=page,
+            page = self.get_page(
+                gacha_type, page=page_offset,
                 end_id=end_id, callback=callback
             )
-            if not result['list']:
+            wish.region = page['region']
+            if not page['list']:
                 break
-            results += result['list']
-            end_id = result['list'][-1]['id']
-            page += 1
-        return results
+            wish += page['list']
+            wish.language = page['list'][-1]['lang']
+            wish.uid = page['list'][-1]['uid']
+            end_id = page['list'][-1]['id']
+            page_offset += 1
+        return wish

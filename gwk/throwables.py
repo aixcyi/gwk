@@ -7,6 +7,7 @@ __all__ = [
     'AuthNotAvailable',
     'MultiPlayerException',
     'MultiRegionException',
+    'MultiLanguageWarning',
     'UnsupportedJsonStruct',
     'RawRespDecodeError',
     'RawRespTypeError',
@@ -40,18 +41,26 @@ class AuthNotAvailable(GWKException):
 
 
 class MultiPlayerException(GWKException):
-    def __init__(self, uid_master: str, uid_other: str):
+    def __init__(self, one: str, another: str):
         super().__init__(
-            f'如需合并uid为 {uid_master} 与 {uid_other} 的'
-            '两份祈愿记录，请将 multi_uid 设为 True 。'
+            f'不能合并 uid 分别为 {one} '
+            f'与 {another} 的两份祈愿记录。'
         )
 
 
 class MultiRegionException(GWKException):
-    def __init__(self, region_master: str, region_other: str):
+    def __init__(self, one: str, another: str):
         super().__init__(
-            f'如需合并地区为 {region_master} 与 {region_other} 的'
-            '两份祈愿记录，请将 multi_region 设为 True 。'
+            f'不能合并地区分别为 {one} '
+            f'与 {another} 的两份祈愿记录。'
+        )
+
+
+class MultiLanguageWarning(GWKException, Warning):
+    def __init__(self, one: str, another: str):
+        super().__init__(
+            f'注意：被合并的两份祈愿记录的'
+            f'语言文字分别为 {one} 与 {another} 。'
         )
 
 

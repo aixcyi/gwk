@@ -19,16 +19,6 @@ from gwk.throwables import *
 
 class Wish:
 
-    @property
-    def uid(self) -> str:
-        """玩家在原神中的账号号码。"""
-        return self._uid_ if hasattr(self, '_uid_') else ''
-
-    @property
-    def language(self) -> str:
-        """祈愿历史记录的语言文字。"""
-        return self._lang_ if hasattr(self, '_lang_') else ''
-
     def __init__(self, wish_type: WishType = None):
         """
         祈愿卡池。包含单个祈愿卡池的所有祈愿记录。
@@ -36,12 +26,23 @@ class Wish:
         :param wish_type: 卡池类型。
         """
         self._records = list()
+        assert type(wish_type) in (WishType, None), \
+            '不应该使用除 WishType 和 None 以外的类型来初始化 Wish 。'
 
         self.wish_type = wish_type
         """祈愿卡池类型。"""
 
         self.CEILING = CEILINGS[wish_type] if wish_type else 0
         """祈愿保底次数（抽出五星金色品质的最大抽取次数）。"""
+
+        self.uid = ''
+        """玩家在原神中的账号号码。"""
+
+        self.language = ''
+        """祈愿历史记录的语言文字。"""
+
+        self.region = ''
+        """游戏客户端所在地区。"""
 
     def __repr__(self) -> str:
         if self.wish_type:
@@ -62,51 +63,46 @@ class Wish:
     def __len__(self) -> int:
         return len(self._records)
 
+    def __getitem__(self, k):
+        assert isinstance(k, (int, slice)), '仅支持整数索引或切片访问。'
+        return self._records[k]
+
     def __iadd__(self, o):
-        if isinstance(o, list):
+        if not isinstance(o, (list, tuple, self.__class__)):
+            raise TypeError(
+                f'Wish 不能与 {type(o).__name__} 类型相加。'
+            )
+        if isinstance(o, (list, tuple)):
             self._records += o
-        elif isinstance(o, self.__class__):
+            return self
+
+        if self.wish_type is not None:
             if o.wish_type != self.wish_type:
                 raise TypeError(
-                    f'{self.wish_type} 类型的祈愿卡池记录'
-                    f'不能与 {o.wish_type} 类型的合并。'
+                    f'{o.wish_type!s} 类型的 Wish 不能与 '
+                    f'{self.wish_type!s} 类型的相加。'
                 )
-            self._records += o.all()
+            if o.uid != self.uid:
+                raise MultiPlayerException(self.uid, o.uid)
+            if o.region != self.region:
+                raise MultiRegionException(self.region, o.region)
+            if o.language != self.language:
+                raise MultiLanguageWarning(self.language, o.language)
         else:
-            raise TypeError(
-                f'{self.__class__.__name__} 类型'
-                f'不能与 {type(o).__name__} 相加。'
-            )
-        self._pad()
+            self.uid = o.uid
+            self.region = o.region
+            self.language = o.language
+        self._records += o[:]
         return self
 
-    def _pad(self):
-        """
-        用末尾的祈愿记录填充 Wish 的以下属性：
-
-        - uid
-        - language
-        """
-        try:
-            self._uid_ = self._records[-1]['uid']
-            self._lang_ = self._records[-1]['lang']
-        except (IndexError, KeyError):
-            pass
-
-    def all(self) -> list:
-        """
-        获取所有祈愿记录。
-        """
-        return self._records.copy()
-
-    def set(self, records: list):
+    def set(self, records: Union[list, tuple]):
         """
         用一份新的祈愿记录覆盖到祈愿卡池中。
         注意：此方法不会检验卡池的祈愿类型跟记录是否匹配。
         """
-        self._records.clear()
-        self._records = records.copy()
-        self._pad()
+        if not isinstance(records, (list, tuple)):
+            return None
+        self._records = list(records)
 
     def clear(self):
         """
@@ -144,7 +140,6 @@ class Wish:
                         负责单一一条记录的字段结构更改。
         """
         self._records = list(map(mapping, self._records))
-        self._pad()
 
 
 def map_raw_to_uigf_j2(record: dict) -> dict:
@@ -216,16 +211,7 @@ class PlayerPool:
                 f'{type(o).__class__.__name__}'
                 ' 类型不能与 PlayerPool 相加。'
             )
-        if self.uid != o.uid:
-            if self.multi_uid is False:
-                raise MultiPlayerException(self.uid, o.uid)
-            self.uid = o.uid
-        if self.region != o.region:
-            if self.multi_region is False:
-                raise MultiRegionException(self.region, o.region)
-            self.region = o.region
-        if o.nonempty():
-            self.wish += o.wish
+        self.wish += o.wish
         return self
 
     def nonempty(self) -> bool:
@@ -252,7 +238,7 @@ class PlayerPool:
                 "export_app_version": UIGF_APP_VERSION,
                 "uigf_version": UIGF_VERSION,
             },
-            "list": self.wish.all(),
+            "list": self.wish[:],
         }
         if not fp:
             return content
@@ -267,7 +253,8 @@ class PlayerPool:
         从文件中载入祈愿记录。
 
         :param fp: 包含JSON的文件对象。
-        :return: 以字典形式返回没有被存入对象的信息。比如导出时间。
+        :return: ``info`` 部分。
+        :raise UnsupportedJsonStruct:
         """
         # 从文件载入并进行基础检查：
         content = json.load(fp)
@@ -279,21 +266,25 @@ class PlayerPool:
             raise UnsupportedJsonStruct(0x02, surplus)
 
         # 反序列化：
-        self.uid = content['info']['uid']
-        self.language = content['info']['lang']
+        self.uid = content['info'].get('uid', '')
+        self.language = content['info'].get('lang', '')
         self.wish.clear()
-        self.wish += content['list']
+        self.wish += content.pop('list', [])
 
-        # 返回未被使用的字段：
-        return {
-            'export_time': datetime.strptime(
-                date_string=content['info']['export_time'],
-                format=UNIFORM_TIME_FORMAT,
-            ),
-            'export_timestamp': int(
-                content['info']['export_timestamp']
-            )
-        }
+        # 返回文件头部信息：
+        return content['info']
+
+    def pad(self):
+        """
+        使用祈愿卡池中的信息填充以下属性：
+
+        - uid
+        - region
+        - language
+        """
+        self.uid = self.wish.uid
+        self.region = self.wish.region
+        self.language = self.wish.language
 
 
 class PlayerShelf:
@@ -346,16 +337,6 @@ class PlayerShelf:
                 f'{type(o).__class__.__name__}'
                 ' 类型不能与 PlayerShelf 相加。'
             )
-        if self.uid != o.uid:
-            if self.multi_uid is False:
-                raise MultiPlayerException(self.uid, o.uid)
-            self.uid = o.uid
-        if self.region != o.region:
-            if self.multi_region is False:
-                raise MultiRegionException(self.region, o.region)
-            self.region = o.region
-        if not o.nonempty():
-            return self
         self.beginner_wish += o.beginner_wish
         self.wanderlust_inv += o.wanderlust_inv
         self.character_wish += o.character_wish
@@ -417,7 +398,7 @@ class PlayerShelf:
                 "uigf_version": UIGF_VERSION,
             },
             "records": {
-                k.value: self._wishes[k].all()
+                k.value: self._wishes[k][:]
                 for k in self._wishes
             }
         }
