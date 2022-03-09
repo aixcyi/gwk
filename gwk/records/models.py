@@ -62,7 +62,7 @@ class Wish:
     def __len__(self) -> int:
         return len(self._records)
 
-    def __getitem__(self, k):
+    def __getitem__(self, k) -> dict:
         assert isinstance(k, (int, slice)), '仅支持整数索引或切片访问。'
         return self._records[k]
 
