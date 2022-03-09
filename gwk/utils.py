@@ -20,7 +20,7 @@ from urllib.parse import (
 )
 
 from gwk.constants import *
-from gwk.throwables import LogfileNotFound, AuthNotFound
+from gwk.throwables import AuthNotFound
 
 TNF: TypeAlias = Literal[True, None, False]
 """
@@ -93,12 +93,10 @@ def extract_auths(
     :param logfile: 原神客户端日志文件的地址。
     :param encoding: 文件编码。默认为 UTF-8。
     :return: 以字典形式存放的鉴权信息。
+    :raise AuthNotFound: 找不到鉴权信息。
     """
-    try:
-        with open(logfile, 'r', encoding=encoding) as f:
-            lines = f.readlines()[::-1]
-    except FileNotFoundError as e:
-        raise LogfileNotFound(e.filename) from e
+    with open(logfile, 'r', encoding=encoding) as f:
+        lines = f.readlines()[::-1]
 
     line_prefix = 'OnGetWebViewPageFinish:'
     for line in lines:

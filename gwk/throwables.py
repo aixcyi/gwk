@@ -2,7 +2,6 @@
 
 __all__ = [
     'GWKException',
-    'LogfileNotFound',
     'AuthNotFound',
     'AuthNotAvailable',
     'MergingException',
@@ -18,11 +17,6 @@ class GWKException(Exception):
 
     def __str__(self):
         return self.message
-
-
-class LogfileNotFound(GWKException):
-    def __init__(self, file: str):
-        super().__init__('找不到原神客户端日志文件。' + file)
 
 
 class AuthNotFound(GWKException):
