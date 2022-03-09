@@ -24,6 +24,7 @@ def page_callback(
         end_id: str,
 ):
     """祈愿记录获取回调。"""
+    _ = size, end_id
     log(f'{gacha_type.label}: 第{page}页获取完毕。')
     sleep(random())
 
