@@ -37,7 +37,7 @@ class Wish:
         :param wish_type: 卡池类型。
         """
         self._records = list()
-        assert type(wish_type) in (WishType, None), \
+        assert type(wish_type) is WishType or wish_type is None, \
             '不应该使用除 WishType 和 None 以外的类型来初始化 Wish 。'
 
         self.wish_type = wish_type
