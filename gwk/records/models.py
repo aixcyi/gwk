@@ -376,18 +376,23 @@ class PlayerShelf:
 
     __bool__ = nonempty
 
-    def dump(self, fp: IO = None) -> Optional[dict]:
+    def dump(
+            self, fp: IO = None,
+            export_time: datetime = None
+    ) -> Optional[dict]:
         """
         将所有卡池的祈愿记录导出为dict，或导出到JSON文件。
 
         :param fp: 文件对象。
+        :param export_time: 导出时间。默认为此时此刻。
         :return: 当不提供fp时返回一个dict，其余时候不返回。
         """
-        export_at = datetime.now()
+        export_at = export_time if export_time else datetime.now()
         content = {
             "info": {
                 "uid": self.uid,
                 "lang": self.language,
+                "region": self.region,
                 "export_time": export_at.strftime(UNIFORM_TIME_FORMAT),
                 "export_timestamp": int(export_at.timestamp()),
                 "export_app": UIGF_APP_NAME,
@@ -412,7 +417,8 @@ class PlayerShelf:
         从文件中载入祈愿记录。
 
         :param fp: 包含JSON的文件对象。
-        :return: 以字典形式返回没有被存入对象的信息。比如导出时间。
+        :return: ``info`` 部分。
+        :raise UnsupportedJsonStruct:
         """
         # 从文件载入并进行基础检查：
         content = json.load(fp)
@@ -424,9 +430,10 @@ class PlayerShelf:
             raise UnsupportedJsonStruct(0x02, surplus)
 
         # 反序列化：
-        self.uid = content['info']['uid']
-        self.language = content['info']['lang']
         try:
+            self.uid = content['info'].get('uid', '')
+            self.language = content['info'].get('lang', '')
+            self.region = content['info'].get('region', '')
             for w in content['records']:
                 wish_type = WishType(w)
                 self._wishes[wish_type].set(
@@ -439,16 +446,8 @@ class PlayerShelf:
                 0x03, e.args[0].rpartition(' is ')[0]
             ) from e
 
-        # 返回未被使用的字段：
-        return {
-            'export_time': datetime.strptime(
-                date_string=content['info']['export_time'],
-                format=UNIFORM_TIME_FORMAT,
-            ),
-            'export_timestamp': int(
-                content['info']['export_timestamp']
-            )
-        }
+        # 返回文件头部信息：
+        return content['info']
 
     def pad(self):
         """
