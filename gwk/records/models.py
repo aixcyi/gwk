@@ -200,14 +200,18 @@ class PlayerPool:
 
     __bool__ = nonempty
 
-    def dump(self, fp: IO = None) -> Optional[dict]:
+    def dump(
+            self, fp: IO = None,
+            export_time: datetime = None
+    ) -> Optional[dict]:
         """
         将所有卡池的祈愿记录导出为dict，或导出到JSON文件。
 
         :param fp: 文件对象。
+        :param export_time: 导出时间。默认为此时此刻。
         :return: 当不提供fp时返回一个dict，其余时候不返回。
         """
-        export_at = datetime.now()
+        export_at = export_time if export_time else datetime.now()
         content = {
             "info": {
                 "uid": self.uid,
