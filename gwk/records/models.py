@@ -449,3 +449,26 @@ class PlayerShelf:
                 content['info']['export_timestamp']
             )
         }
+
+    def pad(self):
+        """
+        使用祈愿卡池中的信息填充以下属性：
+
+        - uid
+        - region
+        - language
+        """
+        for wt in self._wishes:
+
+            if len(self._wishes[wt]) < 1:
+                continue
+            r = self._wishes[wt][-1]  # 最后一条祈愿记录
+
+            if self._wishes[wt].uid:
+                self.uid = self._wishes[wt].uid = r['uid']
+
+            if not self._wishes[wt].language:
+                self.language = self._wishes[wt].language = r['lang']
+
+            if not self._wishes[wt].region:
+                self.region = self._wishes[wt].region = r['region']
