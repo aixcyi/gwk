@@ -296,10 +296,11 @@ class PlayerPool:
         - region
         - language
         """
-        if not self.wish.uid:
-            self.wish.uid = self.wish[-1]['uid']
-        if not self.wish.language:
-            self.wish.language = self.wish[-1]['lang']
+        if len(self.wish) > 0:
+            if not self.wish.uid:
+                self.wish.uid = self.wish[-1]['uid']
+            if not self.wish.language:
+                self.wish.language = self.wish[-1]['lang']
 
         self.uid = self.wish.uid
         self.region = self.wish.region
