@@ -45,10 +45,10 @@ class UnsupportedJsonStruct(GWKException):
             super().__init__(
                 {
                     0x01: ('仅支持导入导出 dict 类型的JSON文件，'
-                           f'而当前的类型是 {context.__name__} 。'),
+                           '而当前的类型是 ' + context.__name__),
                     0x02: ('导入的JSON文件缺少字段：'
                            + '、'.join(context)),
-                    0x03: f'不能解析WishType为 {context} 的祈愿卡池。'
+                    0x03: '不能解析WishType为 %s 的祈愿卡池。' % context
                 }[err]
             )
         except KeyError:
