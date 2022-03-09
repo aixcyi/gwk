@@ -32,7 +32,7 @@ def page_callback(
 def main():
     branch = PlayerPool()
     master = PlayerPool(
-        merge_lang=True, merge_region=True
+        merge_uid=True, merge_lang=True, merge_region=True
     )
 
     log('鉴权信息: 正在读取本地日志……')
