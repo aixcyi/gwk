@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 __all__ = [
-    'TNF',
     'Path',
     'URL',
     'get_logfile',
@@ -14,24 +13,13 @@ __all__ = [
 
 from datetime import datetime, timedelta
 from os.path import isfile, expanduser, join
-from typing import Union, Literal, TypeAlias
+from typing import Union
 from urllib.parse import (
     urlparse, parse_qs, urlencode, urlunparse
 )
 
 from gwk.constants import *
 from gwk.throwables import AuthNotFound
-
-TNF: TypeAlias = Literal[True, None, False]
-"""
->>> master += branch
-
-在将branch合并到master时遵循以下策略：
-
-- True 表示使用branch覆盖master的信息；
-- None 表示不覆盖master的信息，哪怕二者不一致；
-- False 表示当二者信息不一致时抛出异常。
-"""
 
 
 class Path:

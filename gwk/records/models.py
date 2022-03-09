@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+"""
+>>> branch = PlayerPool()
+>>> master = PlayerPool(
+>>>     merge_lang=True, merge_region=True
+>>> )
+>>> master += branch
+
+在将branch合并到master时遵循以下策略：
+
+- ``True`` 表示使用branch覆盖master的信息；
+- ``None`` 表示不覆盖master的信息，哪怕二者不一致；
+- ``False`` 表示当二者信息不一致时抛出异常。
+"""
 
 __all__ = [
     'Wish',
@@ -13,7 +26,6 @@ from typing import Callable, Union, IO, Optional, Dict
 from gwk import UIGF_APP_NAME, UIGF_APP_VERSION, UIGF_VERSION
 from gwk.constants import *
 from gwk.throwables import *
-from gwk.utils import TNF
 
 
 class Wish:
@@ -167,9 +179,9 @@ class PlayerPool:
             uid: str = '',
             lang: str = 'zh-cn',
             region: str = '',
-            merge_uid: TNF = False,
-            merge_region: TNF = False,
-            merge_lang: TNF = True,
+            merge_uid: Optional[bool] = False,
+            merge_region: Optional[bool] = False,
+            merge_lang: Optional[bool] = True,
     ):
         """
         面向单个玩家的祈愿记录操作类。内部使用单个卡池统一存储祈愿记录。
