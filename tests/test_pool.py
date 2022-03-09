@@ -57,14 +57,14 @@ def main():
         branch.dump(f, export)
 
     path_m = f'./records_{branch.uid}.json'
-    with open(path_m, 'r', encoding='UTF-8') as f:
+    with open(path_m, 'a+', encoding='UTF-8') as f:
         master.load(f)
         master.pad()
 
-    log('文件: 正在合并总记录……')
+    log('文件: 正在对祈愿记录进行合并汇总……')
     master += branch
 
-    log('文件: 导出总记录……')
+    log('文件: 导出汇总记录……')
     with open(path_m, 'w', encoding='UTF-8') as f:
         master.dump(f)
 
