@@ -35,21 +35,22 @@ class AuthNotAvailable(GWKException):
 class MergingException(GWKException):
     def __init__(self, attr: str, one: str, another: str, cls: str):
         super().__init__(
-            f'不能合并 {attr} 分别为 {one} '
-            f'与 {another} 的两个 {cls}。'
+            f'不能合并 {attr} 分别为 {one} 与 {another} 的两个 {cls}。'
         )
 
 
 class UnsupportedJsonStruct(GWKException):
     def __init__(self, err, context):
         try:
-            super().__init__({
-                                 0x01: ('仅支持导入导出 dict 类型的JSON文件，'
-                                        f'而当前的类型是 {context.__name__} 。'),
-                                 0x02: ('导入的JSON文件缺少字段：'
-                                        + '、'.join(context)),
-                                 0x03: f'不能解析WishType为 {context} 的祈愿卡池。'
-                             }[err])
+            super().__init__(
+                {
+                    0x01: ('仅支持导入导出 dict 类型的JSON文件，'
+                           f'而当前的类型是 {context.__name__} 。'),
+                    0x02: ('导入的JSON文件缺少字段：'
+                           + '、'.join(context)),
+                    0x03: f'不能解析WishType为 {context} 的祈愿卡池。'
+                }[err]
+            )
         except KeyError:
             super().__init__('[ERROR] 参数错误。')
 

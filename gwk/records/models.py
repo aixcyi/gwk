@@ -93,7 +93,7 @@ class Wish:
         注意：此方法不会检验卡池的祈愿类型跟记录是否匹配。
         """
         if not isinstance(records, (list, tuple)):
-            return None
+            return
         self._records = list(records)
 
     def clear(self):
@@ -135,6 +135,16 @@ class Wish:
 
 
 def _check_tnf(obj, attr: str, new_value):
+    """
+    使用TNF策略校验与合并对象属性。
+
+    TNF决策值应当存在该对象名为 "merge_{attr}" 的属性中，
+    如果缺少这个属性，将会引发异常。
+
+    :param obj: 目标对象（类实例）
+    :param attr: 属性名称。
+    :param new_value: 新的值。
+    """
     old_value = getattr(obj, attr)
     policy = getattr(obj, 'merge_' + attr)
 
