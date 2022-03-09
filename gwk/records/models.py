@@ -4,8 +4,6 @@ __all__ = [
     'Wish',
     'PlayerPool',
     'PlayerShelf',
-    'map_raw_to_uigf_j2',
-    'map_raw_to_basic',
 ]
 
 import json
@@ -140,41 +138,6 @@ class Wish:
                         负责单一一条记录的字段结构更改。
         """
         self._records = list(map(mapping, self._records))
-
-
-def map_raw_to_uigf_j2(record: dict) -> dict:
-    del record['uid']
-    del record['lang']
-    record['uigf_gacha_type'] = {
-        '100': WishType.BEGINNERS_WISH,
-        '200': WishType.WANDERLUST_INVOCATION,
-        '301': WishType.CHARACTER_EVENT_WISH,
-        '302': WishType.WEAPON_EVENT_WISH,
-        '400': WishType.CHARACTER_EVENT_WISH,
-    }[record['gacha_type']].value
-    return record
-
-
-def map_raw_to_basic(record: dict) -> dict:
-    del record['uid']
-    del record['gacha_type']
-    del record['item_id']
-    del record['count']
-    del record['lang']
-    return record
-
-
-def map_fix_time(record: dict) -> dict:
-    """
-    【映射函数】为祈愿记录添加 ``time`` 字段（祈愿时间）。
-
-    - 添加的祈愿时间不一定为精确值。
-    - 使用此函数前需要确保祈愿记录拥有 ``id`` 字段。
-    - 已有的 ``time`` 字段值将会被覆盖。
-    """
-    dt_obj = datetime.fromtimestamp(int(record['id'][:10]))
-    record['time'] = dt_obj.strftime(UNIFORM_TIME_FORMAT)
-    return record
 
 
 class PlayerPool:

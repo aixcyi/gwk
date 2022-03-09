@@ -3,9 +3,13 @@ from random import random
 from time import sleep
 
 from gwk.constants import WishType
-from gwk.records.models import PlayerPool, map_raw_to_basic
+from gwk.records.models import PlayerPool
 from gwk.records.wrappers import RawCollector
-from gwk.utils import extract_auths, get_logfile
+from gwk.utils import (
+    extract_auths,
+    get_logfile,
+    map_raw_to_basic
+)
 
 
 def log(text):
