@@ -216,6 +216,7 @@ class PlayerPool:
             "info": {
                 "uid": self.uid,
                 "lang": self.language,
+                "region": self.region,
                 "export_time": export_at.strftime(UNIFORM_TIME_FORMAT),
                 "export_timestamp": int(export_at.timestamp()),
                 "export_app": UIGF_APP_NAME,
@@ -252,6 +253,7 @@ class PlayerPool:
         # 反序列化：
         self.uid = content['info'].get('uid', '')
         self.language = content['info'].get('lang', '')
+        self.region = content['info'].get('region', '')
         self.wish.clear()
         self.wish += content.pop('list', [])
 
