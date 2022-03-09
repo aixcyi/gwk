@@ -5,7 +5,7 @@ __all__ = [
     'RawCollector',
 ]
 
-from typing import List, Callable, Dict, Any
+from typing import Callable, Dict, Any
 
 from requests import Response
 from requests import get as http_get
