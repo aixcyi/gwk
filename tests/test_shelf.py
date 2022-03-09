@@ -45,9 +45,11 @@ def main():
         branch[wish_type] += collector.get_wish(
             wish_type, page_callback
         )
-        branch[wish_type].maps(map_raw_to_basic)
         log('----------------')
     branch.pad()
+
+    for wish_type in WishType:
+        branch[wish_type].maps(map_raw_to_basic)
 
     log('文件: 导出当次获取……')
     export = datetime.now()
