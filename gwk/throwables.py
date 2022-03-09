@@ -5,9 +5,7 @@ __all__ = [
     'LogfileNotFound',
     'AuthNotFound',
     'AuthNotAvailable',
-    'MultiPlayerException',
-    'MultiRegionException',
-    'MultiLanguageWarning',
+    'MergingException',
     'UnsupportedJsonStruct',
     'RawRespDecodeError',
     'RawRespTypeError',
@@ -40,27 +38,11 @@ class AuthNotAvailable(GWKException):
         super().__init__('测试失败，鉴权信息不可用。' + context)
 
 
-class MultiPlayerException(GWKException):
-    def __init__(self, one: str, another: str):
+class MergingException(GWKException):
+    def __init__(self, attr: str, one: str, another: str, cls: str):
         super().__init__(
-            f'不能合并 uid 分别为 {one} '
-            f'与 {another} 的两份祈愿记录。'
-        )
-
-
-class MultiRegionException(GWKException):
-    def __init__(self, one: str, another: str):
-        super().__init__(
-            f'不能合并地区分别为 {one} '
-            f'与 {another} 的两份祈愿记录。'
-        )
-
-
-class MultiLanguageWarning(GWKException, Warning):
-    def __init__(self, one: str, another: str):
-        super().__init__(
-            f'注意：被合并的两份祈愿记录的'
-            f'语言文字分别为 {one} 与 {another} 。'
+            f'不能合并 {attr} 分别为 {one} '
+            f'与 {another} 的两个 {cls}。'
         )
 
 
@@ -68,12 +50,12 @@ class UnsupportedJsonStruct(GWKException):
     def __init__(self, err, context):
         try:
             super().__init__({
-                0x01: ('仅支持导入导出 dict 类型的JSON文件，'
-                       f'而当前的类型是 {context.__name__} 。'),
-                0x02: ('导入的JSON文件缺少字段：'
-                       + '、'.join(context)),
-                0x03: f'不能解析WishType为 {context} 的祈愿卡池。'
-            }[err])
+                                 0x01: ('仅支持导入导出 dict 类型的JSON文件，'
+                                        f'而当前的类型是 {context.__name__} 。'),
+                                 0x02: ('导入的JSON文件缺少字段：'
+                                        + '、'.join(context)),
+                                 0x03: f'不能解析WishType为 {context} 的祈愿卡池。'
+                             }[err])
         except KeyError:
             super().__init__('[ERROR] 参数错误。')
 

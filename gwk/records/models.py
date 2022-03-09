@@ -13,6 +13,7 @@ from typing import Callable, Union, IO, Optional, Dict
 from gwk import UIGF_APP_NAME, UIGF_APP_VERSION, UIGF_VERSION
 from gwk.constants import *
 from gwk.throwables import *
+from gwk.utils import TNF
 
 
 class Wish:
@@ -133,14 +134,32 @@ class Wish:
         self._records = list(map(mapping, self._records))
 
 
+def _check_tnf(obj, attr: str, new_value):
+    old_value = getattr(obj, attr)
+    policy = getattr(obj, 'merge_' + attr)
+
+    if old_value == new_value:
+        return
+
+    if policy is True:
+        setattr(obj, attr, new_value)
+    elif policy is None:
+        pass
+    elif policy is False:
+        raise MergingException(
+            attr, old_value, new_value, type(obj).__name__
+        )
+
+
 class PlayerPool:
     def __init__(
             self,
             uid: str = '',
             lang: str = 'zh-cn',
             region: str = '',
-            multi_uid: bool = False,
-            multi_region: bool = False,
+            merge_uid: TNF = False,
+            merge_region: TNF = False,
+            merge_lang: TNF = True,
     ):
         """
         面向单个玩家的祈愿记录操作类。内部使用单个卡池统一存储祈愿记录。
@@ -149,14 +168,16 @@ class PlayerPool:
                     空字符串也作为一种标识符。
         :param lang: 祈愿记录的语言文字。默认为``zh-cn``。
         :param region: 游戏客户端所在地区。空字符串也作为一个独立地区。
-        :param multi_uid: 是否允许合并不同玩家的祈愿记录。
-        :param multi_region: 是否允许合并不同地区的祈愿记录。
+        :param merge_uid: 是否允许合并不同玩家的祈愿记录。遵循TNF策略。
+        :param merge_region: 是否允许合并不同地区的祈愿记录。遵循TNF策略。
+        :param merge_lang: 是否允许合并不同文字的祈愿记录。遵循TNF策略。
         """
         self.uid = uid
         self.region = region
         self.language = lang
-        self.multi_uid = multi_uid
-        self.multi_region = multi_region
+        self.merge_uid = merge_uid
+        self.merge_region = merge_region
+        self.merge_language = merge_lang
 
         self.wish = Wish()
         """所有祈愿记录。"""
@@ -167,14 +188,9 @@ class PlayerPool:
                 f'{type(o).__class__.__name__}'
                 ' 类型不能与 PlayerPool 相加。'
             )
-        if o.uid != self.uid:
-            if not self.multi_uid:
-                raise MultiPlayerException(self.uid, o.uid)
-        if o.region != self.region:
-            if not self.multi_region:
-                raise MultiRegionException(self.region, o.region)
-        if o.language != self.language:
-            raise MultiLanguageWarning(self.language, o.language)
+        _check_tnf(self, 'uid', o.uid)
+        _check_tnf(self, 'region', o.region)
+        _check_tnf(self, 'language', o.language)
         self.wish += o.wish
         return self
 
@@ -257,8 +273,9 @@ class PlayerShelf:
             uid: str = '',
             lang: str = 'zh-cn',
             region: str = '',
-            multi_uid: bool = False,
-            multi_region: bool = False,
+            merge_uid: bool = False,
+            merge_region: bool = False,
+            merge_lang: bool = True,
     ):
         """
         面向单个玩家的祈愿记录操作类。内部使用多个卡池分别存储祈愿记录。
@@ -267,14 +284,16 @@ class PlayerShelf:
                     空字符串也作为一种标识符。
         :param lang: 祈愿记录的语言文字。默认为``zh-cn``。
         :param region: 游戏客户端所在地区。空字符串也作为一个独立地区。
-        :param multi_uid: 是否允许合并不同玩家的祈愿记录。
-        :param multi_region: 是否允许合并不同地区的祈愿记录。
+        :param merge_uid: 是否允许合并不同玩家的祈愿记录。遵循TNF策略。
+        :param merge_region: 是否允许合并不同地区的祈愿记录。遵循TNF策略。
+        :param merge_lang: 是否允许合并不同文字的祈愿记录。遵循TNF策略。
         """
         self.uid = uid
         self.region = region
         self.language = lang
-        self.multi_uid = multi_uid
-        self.multi_region = multi_region
+        self.merge_uid = merge_uid
+        self.merge_region = merge_region
+        self.merge_language = merge_lang
 
         self.beginner_wish = Wish(WishType.BEGINNERS_WISH)
         """新手祈愿卡池。"""
@@ -301,14 +320,9 @@ class PlayerShelf:
                 f'{type(o).__class__.__name__}'
                 ' 类型不能与 PlayerShelf 相加。'
             )
-        if o.uid != self.uid:
-            if not self.multi_uid:
-                raise MultiPlayerException(self.uid, o.uid)
-        if o.region != self.region:
-            if not self.multi_region:
-                raise MultiRegionException(self.region, o.region)
-        if o.language != self.language:
-            raise MultiLanguageWarning(self.language, o.language)
+        _check_tnf(self, 'uid', o.uid)
+        _check_tnf(self, 'region', o.region)
+        _check_tnf(self, 'language', o.language)
         self.beginner_wish += o.beginner_wish
         self.wanderlust_inv += o.wanderlust_inv
         self.character_wish += o.character_wish
