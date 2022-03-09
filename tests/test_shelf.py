@@ -60,7 +60,7 @@ def main():
         branch.dump(f, export)
 
     path_m = f'./records_{branch.uid}.json'
-    with open(path_m, 'r', encoding='UTF-8') as f:
+    with open(path_m, 'a+', encoding='UTF-8') as f:
         master.load(f)
         master.pad()
 
