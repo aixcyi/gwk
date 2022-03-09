@@ -508,10 +508,10 @@ class PlayerShelf:
             r = self._wishes[wt][-1]  # 最后一条祈愿记录
 
             if self._wishes[wt].uid:
-                self.uid = self._wishes[wt].uid = r['uid']
+                self.uid = self._wishes[wt].uid = r.get('uid', '')
 
             if not self._wishes[wt].language:
-                self.language = self._wishes[wt].language = r['lang']
+                self.language = self._wishes[wt].language = r.get('lang', '')
 
             if not self._wishes[wt].region:
-                self.region = self._wishes[wt].region = r['region']
+                self.region = self._wishes[wt].region = r.get('region', '')
