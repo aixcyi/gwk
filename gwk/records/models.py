@@ -328,22 +328,19 @@ class PlayerShelf:
     def __len__(self) -> int:
         return len(self._wishes)
 
-    def __getitem__(self, key: Union[WishType, str, int]):
+    def __getitem__(self, key: Union[WishType, str, int]) -> Wish:
         """
-        实现允许使用 WishType 取出卡池对象。
+        实现通过 WishType 取出卡池对象。
 
         >>> shelf = PlayerShelf()
-        >>> wish: Wish = shelf[WishType.BEGINNERS_WISH]
+        >>> wish_100: Wish = shelf[WishType.BEGINNERS_WISH]
+        >>> wish_200: Wish = shelf['200']
+        >>> wish_301: Wish = shelf[301]
         """
-        try:
-            if key in self._wishes:
-                return self._wishes[key]
-            k = WishType(str(key))
-            if k in self._wishes:
-                return self._wishes[k]
-        except ValueError:
-            pass
-        raise KeyError(key)
+        if isinstance(key, WishType):
+            return self._wishes[key]
+        if isinstance(key, (str, int)):
+            return self._wishes[WishType(str(key))]
 
     def __iadd__(self, o):
         if not isinstance(o, self.__class__):
