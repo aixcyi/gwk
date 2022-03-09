@@ -80,16 +80,9 @@ class Wish:
                     f'{o.wish_type!s} 类型的 Wish 不能与 '
                     f'{self.wish_type!s} 类型的相加。'
                 )
-            if o.uid != self.uid:
-                raise MultiPlayerException(self.uid, o.uid)
-            if o.region != self.region:
-                raise MultiRegionException(self.region, o.region)
-            if o.language != self.language:
-                raise MultiLanguageWarning(self.language, o.language)
-        else:
-            self.uid = o.uid
-            self.region = o.region
-            self.language = o.language
+        self.uid = o.uid
+        self.region = o.region
+        self.language = o.language
         self._records += o[:]
         return self
 
@@ -174,6 +167,14 @@ class PlayerPool:
                 f'{type(o).__class__.__name__}'
                 ' 类型不能与 PlayerPool 相加。'
             )
+        if o.uid != self.uid:
+            if not self.multi_uid:
+                raise MultiPlayerException(self.uid, o.uid)
+        if o.region != self.region:
+            if not self.multi_region:
+                raise MultiRegionException(self.region, o.region)
+        if o.language != self.language:
+            raise MultiLanguageWarning(self.language, o.language)
         self.wish += o.wish
         return self
 
@@ -300,6 +301,14 @@ class PlayerShelf:
                 f'{type(o).__class__.__name__}'
                 ' 类型不能与 PlayerShelf 相加。'
             )
+        if o.uid != self.uid:
+            if not self.multi_uid:
+                raise MultiPlayerException(self.uid, o.uid)
+        if o.region != self.region:
+            if not self.multi_region:
+                raise MultiRegionException(self.region, o.region)
+        if o.language != self.language:
+            raise MultiLanguageWarning(self.language, o.language)
         self.beginner_wish += o.beginner_wish
         self.wanderlust_inv += o.wanderlust_inv
         self.character_wish += o.character_wish
