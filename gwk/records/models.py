@@ -261,6 +261,7 @@ class PlayerPool:
 
         :param fp: 包含JSON的文件对象。
         :return: ``info`` 部分。
+                 若文件为空或解析失败，将返回空字典。
         :raise UnsupportedJsonStruct:
         """
         # 从文件载入并进行基础检查：
@@ -447,10 +448,17 @@ class PlayerShelf:
 
         :param fp: 包含JSON的文件对象。
         :return: ``info`` 部分。
+                 若文件为空或解析失败，将返回空字典。
         :raise UnsupportedJsonStruct:
         """
         # 从文件载入并进行基础检查：
-        content = json.load(fp)
+        try:
+            content = json.load(fp)
+        except json.decoder.JSONDecodeError:
+            # 1、空文件也会引发这个错误。
+            # 2、因为self在创建时已经初始化好各个卡池对象，
+            #    因此这里可以直接返回空字典。
+            return {}
         ot = type(content)
         if ot is not dict:
             raise UnsupportedJsonStruct(0x01, ot)
