@@ -8,7 +8,7 @@ from gwk.records.wrappers import RawCollector
 from gwk.utils import (
     extract_auths,
     get_logfile,
-    map_raw_to_basic
+    map_raw_to_uigf_j2,
 )
 
 
@@ -45,7 +45,7 @@ def main():
         branch.wish += collector.get_wish(wish_type, page_callback)
         log('----------------')
     branch.wish.sort()
-    branch.wish.maps(map_raw_to_basic)
+    branch.wish.maps(map_raw_to_uigf_j2)
     branch.pad()
 
     log('文件: 导出当次获取……')
