@@ -41,18 +41,19 @@ class MergingException(GWKException):
 
 class UnsupportedJsonStruct(GWKException):
     def __init__(self, err, context):
-        try:
+        if err == 0x01:
             super().__init__(
-                {
-                    0x01: ('仅支持导入导出 dict 类型的JSON文件，'
-                           '而当前的类型是 ' + context.__name__),
-                    0x02: ('导入的JSON文件缺少字段：'
-                           + '、'.join(context)),
-                    0x03: '不能解析WishType为 %s 的祈愿卡池。' % context
-                }[err]
+                '仅支持导入导出 dict 类型的JSON文件，'
+                '而当前的类型是 ' + context.__name__
             )
-        except KeyError:
-            super().__init__('[ERROR] 参数错误。')
+        elif err == 0x02:
+            super().__init__(
+                '导入的JSON文件缺少字段：' + '、'.join(context)
+            )
+        elif err == 0x03:
+            super().__init__(
+                '不能解析WishType为 %s 的祈愿卡池。' % context
+            )
 
 
 class RawRespDecodeError(Exception):
