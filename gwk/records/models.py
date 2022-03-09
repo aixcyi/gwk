@@ -372,6 +372,13 @@ class PlayerShelf:
         if isinstance(key, (str, int)):
             return self._wishes[WishType(str(key))]
 
+    def __setitem__(self, key: Union[WishType, str, int], value: Wish):
+        assert type(value) is Wish
+        if isinstance(key, WishType):
+            self._wishes[key] = value
+        if isinstance(key, (str, int)):
+            self._wishes[WishType(str(key))] = value
+
     def __iadd__(self, o):
         if not isinstance(o, self.__class__):
             raise TypeError(
