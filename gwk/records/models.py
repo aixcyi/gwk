@@ -71,6 +71,9 @@ class Wish:
             return False
         return o.wish_type == self.wish_type
 
+    def __bool__(self):
+        return self.__len__() > 0
+
     def __len__(self) -> int:
         return len(self._records)
 
@@ -515,3 +518,58 @@ class PlayerShelf:
 
             if not self._wishes[wt].region:
                 self.region = self._wishes[wt].region = r.get('region', '')
+
+
+def player_to_pool(shelf) -> PlayerPool:
+    """
+    将 PlayerShelf 转换为 PlayerPool 。
+
+    注意：请在转换前确保每一条祈愿记录都拥有可以识别为是哪个卡池的字段。
+         否则不能确保能够反向转换回来，或被任何程序正确识别卡池（包括本项目）。
+    """
+    if not isinstance(shelf, PlayerShelf):
+        raise TypeError()
+    pool = PlayerPool(
+        uid=shelf.uid,
+        lang=shelf.language,
+        region=shelf.region,
+        merge_uid=shelf.merge_uid,
+        merge_lang=shelf.merge_language,
+        merge_region=shelf.merge_region,
+    )
+    if not shelf.nonempty():
+        return pool
+    for wish_type in WishType:
+        pool.wish += shelf[wish_type]
+    return pool
+
+
+def player_to_shelf(pool, key: Callable) -> PlayerShelf:
+    """
+    将 PlayerPool 转换为 PlayerShelf 。
+
+    :param pool: PlayerPool的或其衍生类的实例。
+    :param key: 祈愿记录映射函数。输出 WishType ，输入一个参数，
+                用于接受一条祈愿记录，类型为 List[dict] 。
+    :return: PlayerShelf
+    """
+    if (not isinstance(pool, PlayerPool)) or (not callable(key)):
+        raise TypeError()
+    shelf = PlayerShelf(
+        uid=pool.uid,
+        lang=pool.language,
+        region=pool.region,
+        merge_uid=pool.merge_uid,
+        merge_lang=pool.merge_language,
+        merge_region=pool.merge_region,
+    )
+    wishes = {
+        wish_type: list() for wish_type in WishType
+    }
+    if not pool.nonempty():
+        return shelf
+    for record in pool.wish:
+        wishes[key(record)].append(record)
+    for wish_type in wishes:
+        shelf[wish_type] += wishes[wish_type]
+    return shelf
