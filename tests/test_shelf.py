@@ -4,7 +4,7 @@ from time import sleep
 
 from gwk.constants import WishType
 from gwk.records.models import PlayerShelf
-from gwk.records.wrappers import RawCollector
+from gwk.records.raw import RawCollector
 from gwk.utils import (
     extract_auths,
     get_logfile,

@@ -3,7 +3,7 @@ from gwk.records.models import (
     PlayerPool,
     PlayerShelf,
 )
-from gwk.records.wrappers import (
+from gwk.records.raw import (
     GenshinResponse,
     RawCollector,
 )
