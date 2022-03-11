@@ -544,16 +544,17 @@ def player_to_pool(shelf) -> PlayerPool:
     return pool
 
 
-def player_to_shelf(pool, key: Callable) -> PlayerShelf:
+def player_to_shelf(pool, wish_type: Callable) -> PlayerShelf:
     """
     将 PlayerPool 转换为 PlayerShelf 。
 
     :param pool: PlayerPool的或其衍生类的实例。
-    :param key: 祈愿记录映射函数。输出 WishType ，输入一个参数，
-                用于接受一条祈愿记录，类型为 List[dict] 。
+    :param wish_type: 祈愿记录映射函数。输出 WishType ，输入一个参数，
+                      用于接受一条祈愿记录，类型为 List[dict] 。
     :return: PlayerShelf
     """
-    if (not isinstance(pool, PlayerPool)) or (not callable(key)):
+    if (not isinstance(pool, PlayerPool))\
+            or (not callable(wish_type)):
         raise TypeError()
     shelf = PlayerShelf(
         uid=pool.uid,
@@ -564,12 +565,12 @@ def player_to_shelf(pool, key: Callable) -> PlayerShelf:
         merge_region=pool.merge_region,
     )
     wishes = {
-        wish_type: list() for wish_type in WishType
+        wt: list() for wt in WishType
     }
     if not pool.nonempty():
         return shelf
     for record in pool.wish:
-        wishes[key(record)].append(record)
-    for wish_type in wishes:
-        shelf[wish_type] += wishes[wish_type]
+        wishes[wish_type(record)].append(record)
+    for wt in wishes:
+        shelf[wt] += wishes[wt]
     return shelf
