@@ -11,7 +11,7 @@ from requests import Response
 from requests import get as http_get
 
 from gwk.constants import WishType
-from gwk.records import Wish
+from gwk.records.models import Wish
 from gwk.throwables import (
     AuthNotAvailable, RawRespDecodeError, RawRespTypeError
 )

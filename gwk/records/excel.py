@@ -7,7 +7,7 @@ __all__ = [
 from xlsxwriter import Workbook
 
 from gwk.constants import WishType, GachaType
-from gwk.records import PlayerShelf
+from gwk.records.models import PlayerShelf
 
 
 def save_as_uigf(
