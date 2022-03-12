@@ -151,6 +151,22 @@ class Wish:
         """
         self._records = list(map(mapping, self._records))
 
+    def has(self, *fields: str) -> bool:
+        """
+        检测是否所有祈愿记录都拥有指定的字段。
+
+        :param fields: 一个或多个字段的名称。
+        :return: 所有祈愿记录都拥有指定的所有字段
+                 则为 ``True`` ，否则为 ``False`` 。
+        """
+        if len(fields) < 1:
+            return True
+        fs = set(fields)
+        return all([
+            len(fs - set(record.keys())) == 0
+            for record in self._records
+        ])
+
     def group_by_time(self) -> Dict[str, List[dict]]:
         """将祈愿记录按照 **祈愿时间** 分组。
 
