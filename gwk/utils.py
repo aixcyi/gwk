@@ -3,6 +3,7 @@
 __all__ = [
     'Path',
     'URL',
+    'classify',
     'get_logfile',
     'extract_auths',
     'fit_id',
@@ -13,7 +14,7 @@ __all__ = [
 
 from datetime import datetime, timedelta
 from os.path import isfile, expanduser, join
-from typing import Union
+from typing import Union, List, Tuple, Callable
 from urllib.parse import (
     urlparse, parse_qs, urlencode, urlunparse
 )
@@ -55,6 +56,33 @@ class URL:
             self.scheme, self.host, self.path, self.params,
             urlencode(self.query), self.fragment
         ))
+
+
+def classify(
+        listing: List[dict],
+        *classifications: Union[str, Tuple[str, Callable]]
+):
+    if len(classifications) < 1:
+        return listing
+    if type(classifications[0]) is str:
+        key, mapper = classifications[0], None
+    elif type(classifications[0]) is tuple:
+        key, mapper, *_ = classifications[0]
+    else:
+        raise TypeError()
+
+    topdict = dict()
+    for item in listing:
+        k = mapper(item[key]) if callable(mapper) else item[key]
+        if k not in topdict:
+            topdict[k] = list()
+        topdict[k].append(item)
+
+    if len(classifications) > 1:
+        for k in topdict:
+            topdict[k] = classify(topdict[k], *classifications[1:])
+
+    return topdict
 
 
 def get_logfile() -> str:
