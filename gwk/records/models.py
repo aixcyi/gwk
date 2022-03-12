@@ -154,6 +154,10 @@ class Wish:
     def group_by_time(self) -> Dict[str, List[dict]]:
         """将祈愿记录按照 **祈愿时间** 分组。
 
+        请确保所有祈愿记录中都有以下字段：
+
+        - time
+
         因为一次性祈愿十次所产生的祈愿时间是一样的，
         因而可以通过祈愿时间区分祈愿记录属于十连还是单抽。
 
@@ -165,6 +169,10 @@ class Wish:
     def group_by_day(self) -> Dict[str, List[dict]]:
         """将祈愿记录按照 **祈愿日期** 分组。
 
+        请确保所有祈愿记录中都有以下字段：
+
+        - time
+
         :return: 一个以祈愿时间为键、祈愿记录列表为值的字典。
                  祈愿日期是一个字符串，格式为 “YYYY-mm-dd”。
         """
@@ -172,6 +180,12 @@ class Wish:
 
     def group_by_all_type(self) -> dict:
         """将祈愿记录按照角色/武器的类型、星级、名称分组。
+
+        请确保所有祈愿记录中都有以下字段：
+
+        - item_type
+        - rank_type
+        - name
 
         :return: {'角色': {'5': {'甘雨': [单条祈愿记录, ...], }}}
         """
