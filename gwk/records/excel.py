@@ -122,3 +122,4 @@ def save_as_uigf(
                 }[record['rank_type']]
             )
     book.close()
+    return True
