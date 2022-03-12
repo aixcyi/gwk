@@ -47,9 +47,8 @@ def main():
     for wish_type in WishType:
         branch.wish += collector.get_wish(wish_type, page_callback)
         log('----------------')
-    branch.wish.sort()
-    branch.wish.maps(map_raw_to_uigf_j2)
     branch.pad()
+    branch.wish.maps(map_raw_to_uigf_j2)
 
     log('正在导出当次获取……')
     export = datetime.now()
@@ -65,6 +64,7 @@ def main():
         master.load(f)
         master.pad()
     master += branch
+    branch.wish.sort()
 
     log('正在导出合并汇总结果……')
     with open(path_m, 'w', encoding='UTF-8') as f:

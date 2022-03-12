@@ -153,6 +153,27 @@ class Wish:
         """
         self._records = list(map(mapping, self._records))
 
+    def pad(self, index: int = -1):
+        """
+        使用卡池中的某一条祈愿记录填充以下属性：
+
+        - uid
+        - region
+        - language
+
+        :param index: 所使用的祈愿记录的下标。负数表示倒数第几条。
+        :raise IndexError: 索引超出卡池范围。
+        """
+        record = self._records[index]
+        if type(record) is not dict:
+            return
+        if 'uid' in record:
+            self.uid = record['uid']
+        if 'lang' in record:
+            self.uid = record['lang']
+        if 'uid' in record:
+            self.region = record['region']
+
     def has(self, *fields: str) -> bool:
         """
         检测是否所有祈愿记录都拥有指定的字段。
@@ -355,21 +376,25 @@ class PlayerPool:
 
     def pad(self):
         """
-        使用祈愿卡池中的信息填充以下属性：
+        使用祈愿卡池的信息填充以下属性：
 
         - uid
         - region
         - language
         """
-        if len(self.wish) > 0:
-            if not self.wish.uid:
-                self.wish.uid = self.wish[-1]['uid']
-            if not self.wish.language:
-                self.wish.language = self.wish[-1]['lang']
+        if len(self.wish) < 1:
+            return
+        self.wish.pad()
 
-        self.uid = self.wish.uid
-        self.region = self.wish.region
-        self.language = self.wish.language
+        def valid(s) -> bool:
+            return isinstance(s, str) and len(s) > 0
+
+        if valid(self.wish.uid):
+            self.uid = self.wish.uid
+        if valid(self.wish.region):
+            self.region = self.wish.region
+        if valid(self.wish.language):
+            self.language = self.wish.language
 
 
 class PlayerShelf:
