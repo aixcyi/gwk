@@ -17,6 +17,8 @@ __all__ = [
     'Wish',
     'PlayerPool',
     'PlayerShelf',
+    'player_to_pool',
+    'player_to_shelf',
 ]
 
 import json
