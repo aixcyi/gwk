@@ -31,8 +31,8 @@ def page_callback(
 
 
 def main():
-    branch = Wish()
-    master = Wish()
+    branch = Wish()  # 当次获取的祈愿记录（仅能获取半年内的）
+    master = Wish()  # 本地原有的完整祈愿记录
     master.merge_uid = True
     master.merge_lang = True
     master.merge_region = True
@@ -43,9 +43,12 @@ def main():
     log('正在测试鉴权信息……')
     collector.available()
 
+    # 获取各个卡池的祈愿记录：
     for wish_type in WishType:
         branch += collector.get_wish(wish_type, page_callback)
         log('----------------')
+    # 先从祈愿记录获取uid等信息，再转换每条记录的格式，
+    # 否则可能会获取不到需要的信息。
     branch.pad()
     branch.maps(map_raw_to_uigf_j2)
 
@@ -57,6 +60,8 @@ def main():
     with open(path_b, 'w', encoding='UTF-8') as f:
         branch.dump(f, export)
 
+    # 因为当次只能获取最近半年内的祈愿记录，是不完整的，
+    # 因而需要合并本地留存的祈愿记录，形成一份完整的祈愿历史记录。
     log('正在合并汇总……')
     path_m = f'./uigf_{branch.uid}.json'
     with open(path_m, 'a+', encoding='UTF-8') as f:
