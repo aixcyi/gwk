@@ -25,7 +25,7 @@ from gwk.constants import *
 from gwk.throwables import AuthNotFound
 
 
-TNF: TypeAlias = Literal[True, None, False]
+TNF = Literal[True, None, False]
 """
 >>> branch = Wish()
 >>> master = Wish(

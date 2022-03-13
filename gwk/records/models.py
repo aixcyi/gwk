@@ -2,7 +2,6 @@
 
 __all__ = [
     'Wish',
-    'Player',
 ]
 
 import json
@@ -12,7 +11,7 @@ from typing import *
 from gwk import UIGF_APP_NAME, UIGF_APP_VERSION, UIGF_VERSION
 from gwk.constants import *
 from gwk.throwables import *
-from gwk.utils import classify, TNF, strptz
+from gwk.utils import classify, TNF
 
 
 def _check_tnf(obj, attr: str, new_value):
@@ -69,6 +68,12 @@ class Wish:
         self.region = ''
         """游戏客户端所在地区。"""
 
+        self.merging_check = True
+        """
+        - ``True`` 合并前使用 TNF 策略检查被合并对象的所有信息。（默认）
+        - ``False`` 合并时一概接受，不使用 TNF 策略检查任何信息。
+        """
+
         self.merge_uid: TNF = False
         """是否允许合并不同玩家的祈愿记录。遵循TNF策略。默认为 False 。"""
 
@@ -117,9 +122,14 @@ class Wish:
                     f'{o.wish_type!s} 类型的 Wish 不能与 '
                     f'{self.wish_type!s} 类型的相加。'
                 )
-        _check_tnf(self, 'uid', o.uid)
-        _check_tnf(self, 'region', o.region)
-        _check_tnf(self, 'language', o.language)
+        if self.merging_check:
+            _check_tnf(self, 'uid', o.uid)
+            _check_tnf(self, 'region', o.region)
+            _check_tnf(self, 'language', o.language)
+        else:
+            self.uid = o.uid
+            self.region = o.region
+            self.language = o.language
         self._records += o[:]
         return self
 
@@ -152,15 +162,17 @@ class Wish:
             reverse: bool = False
     ):
         """
-        对祈愿历史记录排序，然后去除重复项。
-
-        - 使用 ``id`` 字段鉴别重复记录。如果其字段值相同，将会直接判定为重复并清除。
-        - 默认的排序依据为 ``time``、``id`` 两个字段。
+        对祈愿历史记录排序。
 
         :param key: 排序依据。
         :param reverse: 是否倒序排列。
         """
         self._records.sort(key=key, reverse=reverse)
+
+    def deduplicate(self):
+        """
+        使用 ``id`` 字段鉴别重复记录。如果其字段值相同，将会直接判定为重复并清除。
+        """
         for i in range(len(self._records) - 1, 0, -1):
             # 注意range的区间是 (0, __len__]
             last_id = self._records[i - 1]['id']
@@ -186,16 +198,19 @@ class Wish:
         - language
 
         :param index: 所使用的祈愿记录的下标。负数表示倒数第几条。
-        :raise IndexError: 索引超出卡池范围。
         """
-        record = self._records[index]
+        try:
+            record = self._records[index]
+        except IndexError:
+            return
         if type(record) is not dict:
             return
+        # 如果祈愿记录中没有相应字段，那么不应覆盖原有值：
         if 'uid' in record:
             self.uid = record['uid']
         if 'lang' in record:
-            self.uid = record['lang']
-        if 'uid' in record:
+            self.language = record['lang']
+        if 'region' in record:
             self.region = record['region']
 
     def has(self, *fields: str) -> bool:
@@ -320,270 +335,3 @@ class Wish:
         :return: {'角色': {'5': {'甘雨': [单条祈愿记录, ...], }}}
         """
         return classify(self._records, 'item_type', 'rank_type', 'name')
-
-
-class Player:
-    def __init__(
-            self,
-            uid: str = '',
-            lang: str = 'zh-cn',
-            region: str = '',
-            merge_uid: bool = False,
-            merge_region: bool = False,
-            merge_lang: bool = True,
-    ):
-        """
-        面向单个玩家的祈愿记录操作类。内部使用多个卡池分别存储祈愿记录。
-
-        :param uid: 玩家在原神中的账号号码，或自定义的唯一标识符。
-                    空字符串也作为一种标识符。
-        :param lang: 祈愿记录的语言文字。默认为``zh-cn``。
-        :param region: 游戏客户端所在地区。空字符串也作为一个独立地区。
-        :param merge_uid: 是否允许合并不同玩家的祈愿记录。遵循TNF策略。
-        :param merge_region: 是否允许合并不同地区的祈愿记录。遵循TNF策略。
-        :param merge_lang: 是否允许合并不同文字的祈愿记录。遵循TNF策略。
-        """
-        self.uid = uid
-        self.region = region
-        self.language = lang
-        self.merge_uid = merge_uid
-        self.merge_region = merge_region
-        self.merge_language = merge_lang
-
-        self.beginner_wish = Wish(WishType.BEGINNERS_WISH)
-        """新手祈愿卡池。"""
-
-        self.wanderlust_inv = Wish(WishType.WANDERLUST_INVOCATION)
-        """常驻祈愿卡池。"""
-
-        self.character_wish = Wish(WishType.CHARACTER_EVENT_WISH)
-        """角色祈愿卡池、角色祈愿-2卡池。"""
-
-        self.weapon_wish = Wish(WishType.WEAPON_EVENT_WISH)
-        """武器祈愿卡池。"""
-
-        self._wishes: Dict[WishType, Wish] = {
-            wish.wish_type: wish for wish in [
-                self.beginner_wish, self.wanderlust_inv,
-                self.character_wish, self.weapon_wish,
-            ]
-        }
-
-    def __len__(self) -> int:
-        return len(self._wishes)
-
-    def __getitem__(self, key: Union[WishType, str, int]) -> Wish:
-        """
-        实现通过 WishType 取出卡池对象。
-
-        >>> shelf = Player()
-        >>> wish_100: Wish = shelf[WishType.BEGINNERS_WISH]
-        >>> wish_200: Wish = shelf['200']
-        >>> wish_301: Wish = shelf[301]
-        """
-        if isinstance(key, WishType):
-            return self._wishes[key]
-        if isinstance(key, (str, int)):
-            return self._wishes[WishType(str(key))]
-
-    def __setitem__(self, key: Union[WishType, str, int], value: Wish):
-        assert type(value) is Wish
-        if isinstance(key, WishType):
-            self._wishes[key] = value
-        if isinstance(key, (str, int)):
-            self._wishes[WishType(str(key))] = value
-
-    def __iadd__(self, o):
-        if not isinstance(o, self.__class__):
-            raise TypeError(
-                f'{type(o).__class__.__name__}'
-                ' 类型不能与 PlayerShelf 相加。'
-            )
-        _check_tnf(self, 'uid', o.uid)
-        _check_tnf(self, 'region', o.region)
-        _check_tnf(self, 'language', o.language)
-        self.beginner_wish += o.beginner_wish
-        self.wanderlust_inv += o.wanderlust_inv
-        self.character_wish += o.character_wish
-        self.weapon_wish += o.weapon_wish
-        return self
-
-    def __iter__(self):
-        """
-        实现允许使用 for 循环遍历所有卡池。
-
-        >>> shelf = Player()
-        >>> for key in shelf:
-        >>>     wish_type: WishType = key
-        >>>     wish_obj: Wish = shelf[key]
-        """
-        return iter(self._wishes)
-
-    def nonempty(self) -> bool:
-        """但凡有一条祈愿记录都会返回``True``，否则返回``False``。"""
-        return any([
-            len(self._wishes[k]) for k in self._wishes
-        ])
-
-    __bool__ = nonempty
-
-    def dump(
-            self, fp: IO = None,
-            export_time: datetime = None
-    ) -> Optional[dict]:
-        """
-        将所有卡池的祈愿记录导出为dict，或导出到JSON文件。
-
-        :param fp: 文件对象。
-        :param export_time: 导出时间。默认为此时此刻。
-        :return: 当不提供fp时返回一个dict，其余时候不返回。
-        """
-        export_at = export_time if export_time else datetime.now()
-        content = {
-            "info": {
-                "uid": self.uid,
-                "lang": self.language,
-                "region": self.region,
-                "export_time": export_at.strftime(UNIFORM_TIME_FORMAT),
-                "export_timestamp": int(export_at.timestamp()),
-                "export_timezone": strptz(export_at, 'UTC+08:00:00'),
-                "export_app": UIGF_APP_NAME,
-                "export_app_version": UIGF_APP_VERSION,
-                "uigf_version": UIGF_VERSION,
-                "wishes": [wt.label for wt in self._wishes]
-            },
-            "records": {
-                wt.value: self._wishes[wt][:]
-                for wt in self._wishes
-            }
-        }
-        if not fp:
-            return content
-        json.dump(
-            content, fp, ensure_ascii=False,
-            indent=None, separators=(',', ':')
-        )
-        return None
-
-    def load(self, fp: IO = None):
-        """
-        从文件中载入祈愿记录。
-
-        :param fp: 包含JSON的文件对象。
-        :return: ``info`` 部分。
-                 若文件为空或解析失败，将返回空字典。
-        :raise UnsupportedJsonStruct:
-        """
-        # 从文件载入并进行基础检查：
-        try:
-            content = json.load(fp)
-        except json.decoder.JSONDecodeError:
-            # 1、空文件也会引发这个错误。
-            # 2、因为self在创建时已经初始化好各个卡池对象，
-            #    因此这里可以直接返回空字典。
-            return {}
-        ot = type(content)
-        if ot is not dict:
-            raise UnsupportedJsonStruct(0x01, ot)
-        surplus = {'info', 'records'} - set(content.keys())
-        if len(surplus) > 0:
-            raise UnsupportedJsonStruct(0x02, surplus)
-
-        # 反序列化：
-        try:
-            self.uid = content['info'].get('uid', '')
-            self.language = content['info'].get('lang', '')
-            self.region = content['info'].get('region', '')
-            for w in content['records']:
-                wish_type = WishType(w)
-                self._wishes[wish_type].set(
-                    content['records'][w]
-                )
-        except ValueError as e:
-            # e.args == ('300 is not a valid Type',)
-            # rpartition是为了预防value有空格的情况
-            raise UnsupportedJsonStruct(
-                0x03, e.args[0].rpartition(' is ')[0]
-            ) from e
-
-        # 返回文件头部信息：
-        return content['info']
-
-    def pad(self):
-        """
-        使用祈愿卡池中的信息填充以下属性：
-
-        - uid
-        - region
-        - language
-        """
-        for wt in self._wishes:
-
-            if len(self._wishes[wt]) < 1:
-                continue
-            r = self._wishes[wt][-1]  # 最后一条祈愿记录
-
-            if self._wishes[wt].uid:
-                self.uid = self._wishes[wt].uid = r.get('uid', '')
-
-            if not self._wishes[wt].language:
-                self.language = self._wishes[wt].language = r.get('lang', '')
-
-            if not self._wishes[wt].region:
-                self.region = self._wishes[wt].region = r.get('region', '')
-
-
-# def player_to_pool(shelf) -> PlayerPool:
-#     """
-#     将 PlayerShelf 转换为 PlayerPool 。
-#
-#     注意：请在转换前确保每一条祈愿记录都拥有可以识别为是哪个卡池的字段。
-#          否则不能确保能够反向转换回来，或被任何程序正确识别卡池（包括本项目）。
-#     """
-#     if not isinstance(shelf, PlayerShelf):
-#         raise TypeError()
-#     pool = PlayerPool(
-#         uid=shelf.uid,
-#         lang=shelf.language,
-#         region=shelf.region,
-#         merge_uid=shelf.merge_uid,
-#         merge_lang=shelf.merge_language,
-#         merge_region=shelf.merge_region,
-#     )
-#     if not shelf.nonempty():
-#         return pool
-#     for wish_type in WishType:
-#         pool.wish += shelf[wish_type]
-#     return pool
-#
-#
-# def player_to_shelf(pool, wish_type: Callable) -> PlayerShelf:
-#     """
-#     将 PlayerPool 转换为 PlayerShelf 。
-#
-#     :param pool: PlayerPool的或其衍生类的实例。
-#     :param wish_type: 祈愿记录映射函数。输出 WishType ，输入一个参数，
-#                       用于接受一条祈愿记录，类型为 List[dict] 。
-#     :return: PlayerShelf
-#     """
-#     if (not isinstance(pool, PlayerPool)) \
-#             or (not callable(wish_type)):
-#         raise TypeError()
-#     shelf = PlayerShelf(
-#         uid=pool.uid,
-#         lang=pool.language,
-#         region=pool.region,
-#         merge_uid=pool.merge_uid,
-#         merge_lang=pool.merge_language,
-#         merge_region=pool.merge_region,
-#     )
-#     wishes = {
-#         wt: list() for wt in WishType
-#     }
-#     if not pool.nonempty():
-#         return shelf
-#     for record in pool.wish:
-#         wishes[wish_type(record)].append(record)
-#     for wt in wishes:
-#         shelf[wt] += wishes[wt]
-#     return shelf

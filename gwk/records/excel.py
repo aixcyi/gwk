@@ -7,11 +7,12 @@ __all__ = [
 from xlsxwriter import Workbook
 
 from gwk.constants import WishType, GachaType
-from gwk.records.models import Player
+from gwk.records.models import Wish
+from gwk.utils import classify
 
 
 def save_as_uigf(
-        player: Player,
+        wish: Wish,
         file_path: str,
         font_name: str = '微软雅黑'
 ):
@@ -28,28 +29,27 @@ def save_as_uigf(
     - 总第几次祈愿
     - 保底内第几次祈愿
 
-    :param player: PlayerShelf类或衍生类的实例。
+    :param wish: PlayerShelf类或衍生类的实例。
     :param file_path: xlsx文件地址。
     :param font_name: 所用字体的名称。
     :return: 返回 ``True`` 表示导出完毕，否则表示未能导出。
     """
-    if (not isinstance(player, Player)) \
-            or (not player.nonempty()):
+    if (not isinstance(wish, Wish)) or (not wish.nonempty()):
         return False
     book = Workbook(filename=file_path)
-    configs = [
+    columns = [
         {'width': (0, 0, 24), 'en': 'Time', 'cn': '时间'},
         {'width': (1, 1, 14), 'en': 'Item', 'cn': '名称'},
         {'width': (2, 2, 7), 'en': 'Type', 'cn': '类别'},
         {'width': (3, 3, 7), 'en': 'Rank', 'cn': '星级'},
-        {'width': (4, 4, 24), 'en': 'Wish', 'cn': '祈愿卡池'},
+        {'width': (4, 4, 16), 'en': 'Wish', 'cn': '祈愿卡池'},
         {'width': (5, 5, 9), 'en': 'No. ', 'cn': '总第几抽'},
         {'width': (6, 6, 14), 'en': '[No.]', 'cn': '保底内第几抽'},
     ]
-    is_sc = any([
-        str(player.language).lower() == lang
-        for lang in ['cn', 'zh-cn', 'zh-tw']
-    ])
+    if str(wish.language).lower() in ('cn', 'zh-cn', 'zh-tw'):
+        lang = 'cn'
+    else:
+        lang = 'en'
     style_head = book.add_format({  # 表格头部
         "align": "left",
         "font_name": font_name,
@@ -85,35 +85,37 @@ def save_as_uigf(
         "color": "#bd6932",
         "bold": True
     })
+    records = classify(wish[:], 'uigf_gacha_type')
+
     for wt in WishType:
         # 按卡池创建表：
         sheet = book.add_worksheet(wt.label)
 
         # 设置样式：
         sheet.freeze_panes(1, 0)  # 冻结首行
-        sheet.write_row(
+        sheet.write_row(  # 设置首行的内容（表头）
             row=0, col=0, cell_format=style_head,
-            data=[
-                config['cn'] if is_sc else config['en']
-                for config in configs
-            ]
+            data=[col[lang] for col in columns],
         )
-        for config in configs:
+        for config in columns:  # 设置各个列宽：
             sheet.set_column(*config['width'])
 
         # 写入祈愿记录：
-        row = 0  # 总计祈愿多少次
-        counter = 0  # 距离上次抽出五星角色/武器多少次（从1开始算）
-        for record in player[wt]:
-            row += 1
-            counter += 1
+        if wt.value not in records:
+            # 有些卡池已经不在了，比如新手祈愿，应当跳过
+            continue
+        total = 0  # 总计祈愿多少次
+        last5 = 0  # 距离上次抽出五星角色/武器多少次（从1开始算）
+        for record in records[wt.value]:
+            total += 1
+            last5 += 1
             sheet.write_row(
-                row=row, col=0,
+                row=total, col=0,
                 data=[
                     record['time'], record['name'],
                     record['item_type'], int(record['rank_type']),
                     GachaType(record['gacha_type']).label,
-                    row, counter
+                    total, last5
                 ],
                 cell_format={
                     '3': style_rank3,
@@ -121,5 +123,7 @@ def save_as_uigf(
                     '5': style_rank5,
                 }[record['rank_type']]
             )
+            if record['rank_type'] == '5':
+                last5 = 0
     book.close()
     return True
