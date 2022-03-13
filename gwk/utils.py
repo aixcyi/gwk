@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 __all__ = [
+    'TNF',
     'Path',
     'URL',
     'classify',
@@ -14,13 +15,29 @@ __all__ = [
 
 from datetime import datetime, timedelta
 from os.path import isfile, expanduser, join
-from typing import Union, List, Tuple, Callable
+from typing import *
 from urllib.parse import (
     urlparse, parse_qs, urlencode, urlunparse
 )
 
 from gwk.constants import *
 from gwk.throwables import AuthNotFound
+
+
+TNF: TypeAlias = Literal[True, None, False]
+"""
+>>> branch = Wish()
+>>> master = Wish(
+>>>     merge_lang=True, merge_region=True
+>>> )
+>>> master += branch
+
+在将branch合并到master时遵循以下策略：
+
+- ``True`` 表示允许用branch覆盖master的信息；
+- ``None`` 表示拒绝覆盖master的信息，哪怕二者不一致；
+- ``False`` 表示当二者信息不一致时抛出异常。
+"""
 
 
 class Path:

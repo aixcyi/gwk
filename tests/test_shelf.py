@@ -4,7 +4,7 @@ from time import sleep
 
 from gwk.constants import WishType
 from gwk.records.excel import save_as_uigf
-from gwk.records.models import PlayerShelf
+from gwk.records.models import Player
 from gwk.records.raw import RawCollector
 from gwk.utils import (
     extract_auths,
@@ -31,8 +31,8 @@ def page_callback(
 
 
 def main():
-    branch = PlayerShelf()
-    master = PlayerShelf(
+    branch = Player()
+    master = Player(
         merge_uid=True, merge_lang=True, merge_region=True
     )
 

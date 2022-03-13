@@ -4,9 +4,7 @@ from time import sleep
 
 from gwk.constants import WishType
 from gwk.records.excel import save_as_uigf
-from gwk.records.models import (
-    PlayerPool, player_to_shelf
-)
+from gwk.records.models import Wish
 from gwk.records.raw import RawCollector
 from gwk.utils import (
     extract_auths,
@@ -33,10 +31,11 @@ def page_callback(
 
 
 def main():
-    branch = PlayerPool()
-    master = PlayerPool(
-        merge_uid=True, merge_lang=True, merge_region=True
-    )
+    branch = Wish()
+    master = Wish()
+    master.merge_uid = True
+    master.merge_lang = True
+    master.merge_region = True
 
     log('正在读取本地的客户端日志……')
     collector = RawCollector(auths=extract_auths(get_logfile()))
@@ -45,10 +44,10 @@ def main():
     collector.available()
 
     for wish_type in WishType:
-        branch.wish += collector.get_wish(wish_type, page_callback)
+        branch += collector.get_wish(wish_type, page_callback)
         log('----------------')
     branch.pad()
-    branch.wish.maps(map_raw_to_uigf_j2)
+    branch.maps(map_raw_to_uigf_j2)
 
     log('正在导出当次获取……')
     export = datetime.now()
@@ -64,18 +63,18 @@ def main():
         master.load(f)
         master.pad()
     master += branch
-    branch.wish.sort()
+    branch.sort()
 
     log('正在导出合并汇总结果……')
     with open(path_m, 'w', encoding='UTF-8') as f:
         master.dump(f)
 
-    if master.wish.has('uigf_gacha_type'):
-        log('正在导出Excel表格……')
-        shelf = player_to_shelf(master, lambda r: WishType(r['uigf_gacha_type']))
-        path_x = f'./uigf_{branch.uid}.xlsx'
-        if not save_as_uigf(shelf, path_x):
-            log('警告: Excel表格导出失败')
+    # if master.has('uigf_gacha_type'):
+    #     log('正在导出Excel表格……')
+    #     shelf = player_to_shelf(master, lambda r: WishType(r['uigf_gacha_type']))
+    #     path_x = f'./uigf_{branch.uid}.xlsx'
+    #     if not save_as_uigf(shelf, path_x):
+    #         log('警告: Excel表格导出失败')
 
     log('完毕。')
 

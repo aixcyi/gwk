@@ -7,11 +7,11 @@ __all__ = [
 from xlsxwriter import Workbook
 
 from gwk.constants import WishType, GachaType
-from gwk.records.models import PlayerShelf
+from gwk.records.models import Player
 
 
 def save_as_uigf(
-        player: PlayerShelf,
+        player: Player,
         file_path: str,
         font_name: str = '微软雅黑'
 ):
@@ -33,7 +33,7 @@ def save_as_uigf(
     :param font_name: 所用字体的名称。
     :return: 返回 ``True`` 表示导出完毕，否则表示未能导出。
     """
-    if (not isinstance(player, PlayerShelf)) \
+    if (not isinstance(player, Player)) \
             or (not player.nonempty()):
         return False
     book = Workbook(filename=file_path)
