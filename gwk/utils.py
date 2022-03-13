@@ -246,13 +246,11 @@ def map_raw_to_basic(record: dict) -> dict:
     【映射函数】删除祈愿记录中的以下字段：
 
     - uid
-    - gacha_type
     - item_id
     - count
     - lang
     """
     del record['uid']
-    del record['gacha_type']
     del record['item_id']
     del record['count']
     del record['lang']
