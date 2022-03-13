@@ -2,6 +2,7 @@
 
 __all__ = [
     'Wish',
+    'merge_from_ggk',
 ]
 
 import json
@@ -335,3 +336,42 @@ class Wish:
         :return: {'角色': {'5': {'甘雨': [单条祈愿记录, ...], }}}
         """
         return classify(self._records, 'item_type', 'rank_type', 'name')
+
+
+def merge_from_ggk(wish: Wish, fp: IO):
+    content = json.load(fp)
+    if 'records' not in content:
+        return None
+
+    # "gacha_type": "", "item_id": "", "count": "1", "uigf_gacha_type": "200",
+    for w in content['records']:
+        def mapping(r) -> dict:
+            r['gacha_type'] = w
+            r['item_id'] = ''
+            r['count'] = '1'
+            r['uigf_gacha_type'] = w
+            return r
+
+        wish += list(map(mapping, content['records'][w]))
+    wish.sort()
+
+    records = wish[:]
+    for i in range(len(records) - 1, 0, -1):
+        # 注意range的区间是 (0, __len__]
+        last_id = records[i - 1]['id']
+        curr_id = records[i]['id']
+        if last_id != curr_id:
+            continue
+        last_gt = records[i - 1]['gacha_type']
+        curr_gt = records[i]['gacha_type']
+        if last_gt in ('100', '200', '302'):
+            records.pop(i)
+            continue
+        if curr_gt == '400':
+            records.pop(i - 1)
+        elif last_gt == '400':
+            records.pop(i)
+        else:
+            records.pop(i)
+    wish.set(records)
+    return wish
