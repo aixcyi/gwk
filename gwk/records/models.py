@@ -12,7 +12,7 @@ from typing import *
 from gwk import UIGF_APP_NAME, UIGF_APP_VERSION, UIGF_VERSION
 from gwk.constants import *
 from gwk.throwables import *
-from gwk.utils import classify, TNF
+from gwk.utils import classify, TNF, strptz
 
 
 def _check_tnf(obj, attr: str, new_value):
@@ -446,13 +446,15 @@ class Player:
                 "region": self.region,
                 "export_time": export_at.strftime(UNIFORM_TIME_FORMAT),
                 "export_timestamp": int(export_at.timestamp()),
+                "export_timezone": strptz(export_at, 'UTC+08:00:00'),
                 "export_app": UIGF_APP_NAME,
                 "export_app_version": UIGF_APP_VERSION,
                 "uigf_version": UIGF_VERSION,
+                "wishes": [wt.label for wt in self._wishes]
             },
             "records": {
-                k.value: self._wishes[k][:]
-                for k in self._wishes
+                wt.value: self._wishes[wt][:]
+                for wt in self._wishes
             }
         }
         if not fp:

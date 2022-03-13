@@ -5,6 +5,7 @@ __all__ = [
     'Path',
     'URL',
     'classify',
+    'strptz',
     'get_logfile',
     'extract_auths',
     'fit_id',
@@ -100,6 +101,19 @@ def classify(
             topdict[k] = classify(topdict[k], *classifications[1:])
 
     return topdict
+
+
+def strptz(dt: datetime, default=None):
+    offset = dt.utcoffset()
+    if not offset:
+        return default
+    seconds = offset.seconds
+    sign = '+' if seconds >= 0 else '-'
+    seconds = abs(seconds)
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    return f'UTC{sign}{hours:02d}:{minutes:02d}:{seconds:02d}'
 
 
 def get_logfile() -> str:
