@@ -275,16 +275,16 @@ class Wish:
         从文件中载入祈愿记录。
 
         :param fp: 包含JSON的文件对象。
-        :return: ``info`` 部分。若文件为空或解析失败，将返回空字典。
+        :return: ``info`` 部分。若文件为空，将返回空字典。
         :raise UnsupportedJsonStruct:
+        :raise json.decoder.JSONDecodeError:
         """
-        try:
-            content = json.load(fp)
-        except json.decoder.JSONDecodeError:
-            # 1、空文件也会引发这个错误。
-            # 2、因为self在创建时已经初始化好各个卡池对象，
-            #    因此这里可以直接返回空字典，而不进行其它操作。
+        # 空文件也会引发这个错误，但这种错误不应该面向用户引发。
+        if len(fp.read(1)) < 1:
             return {}
+
+        # 异常引发原因比较多，容易一叶障目，故不拦截json.load()的异常。
+        content = json.load(fp)
 
         # 基础检查：
         ot = type(content)
