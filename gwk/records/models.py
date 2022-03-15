@@ -2,7 +2,7 @@
 
 __all__ = [
     'Wish',
-    'merge_from_ggk',
+    'migrate',
 ]
 
 import json
@@ -159,7 +159,7 @@ class Wish:
 
     def sort(
             self, *,
-            key=lambda r: (r['time'], r['id']),
+            key: Callable = lambda r: (r['time'], r['id']),
             reverse: bool = False
     ):
         """
@@ -172,14 +172,20 @@ class Wish:
 
     def deduplicate(self):
         """
-        使用 ``id`` 字段鉴别重复记录。如果其字段值相同，将会直接判定为重复并清除。
+        鉴别重复记录并清除。
         """
+        if not isinstance(self._records, list):
+            raise TypeError('')
         for i in range(len(self._records) - 1, 0, -1):
             # 注意range的区间是 (0, __len__]
-            last_id = self._records[i - 1]['id']
-            curr_id = self._records[i]['id']
-            if last_id == curr_id:
-                self._records.pop(i)
+            last = self._records[i - 1]
+            curr = self._records[i]
+            if last['id'] != curr['id']:
+                continue
+            if 'gacha_type' in last and 'gacha_type' in curr:
+                if curr['gacha_type'] in ('400',):
+                    self._records.pop(i - 1)
+            self._records.pop(i)
 
     def maps(self, mapping: Callable):
         """
@@ -339,40 +345,38 @@ class Wish:
         return classify(self._records, 'item_type', 'rank_type', 'name')
 
 
-def merge_from_ggk(wish: Wish, fp: IO):
+def migrate(fp: IO) -> Wish:
+    """
+    将旧项目导出的JSON文件转换为 Wish 。
+
+    [genshin-gacha-kit](https://github.com/aixcyi/genshin-gacha-kit)
+
+    :param fp:
+    :return:
+    """
     content = json.load(fp)
-    if 'records' not in content:
-        return None
+    wish = Wish()
 
-    # "gacha_type": "", "item_id": "", "count": "1", "uigf_gacha_type": "200",
+    if type(content) is not dict:
+        raise TypeError('文件格式不正确。')
+
+    if 'infos' not in content or type(content['infos']) is not dict:
+        raise TypeError('文件格式不正确。')
+    wish.uid = content['infos'].get('uid', '')
+    wish.region = content['infos'].get('region', '')
+    wish.language = content['infos'].get('lang', '')
+
+    def mapping(r) -> dict:
+        r['gacha_type'] = w
+        r['item_id'] = ''
+        r['count'] = '1'
+        r['uigf_gacha_type'] = w
+        return r
+
+    if 'records' not in content and type(content['records']) is not dict:
+        raise TypeError('文件格式不正确。')
     for w in content['records']:
-        def mapping(r) -> dict:
-            r['gacha_type'] = w
-            r['item_id'] = ''
-            r['count'] = '1'
-            r['uigf_gacha_type'] = w
-            return r
-
         wish += list(map(mapping, content['records'][w]))
-    wish.sort()
+    wish.sort(key=lambda r: (r['uigf_gacha_type'], r['time'], r['id']))
 
-    records = wish[:]
-    for i in range(len(records) - 1, 0, -1):
-        # 注意range的区间是 (0, __len__]
-        last_id = records[i - 1]['id']
-        curr_id = records[i]['id']
-        if last_id != curr_id:
-            continue
-        last_gt = records[i - 1]['gacha_type']
-        curr_gt = records[i]['gacha_type']
-        if last_gt in ('100', '200', '302'):
-            records.pop(i)
-            continue
-        if curr_gt == '400':
-            records.pop(i - 1)
-        elif last_gt == '400':
-            records.pop(i)
-        else:
-            records.pop(i)
-    wish.set(records)
     return wish
