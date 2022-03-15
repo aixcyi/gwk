@@ -176,15 +176,20 @@ class Wish:
         """
         if not isinstance(self._records, list):
             raise TypeError('')
-        for i in range(len(self._records) - 1, 0, -1):
-            # 注意range的区间是 (0, __len__]
+        i = 1
+        while i < len(self._records):
             last = self._records[i - 1]
             curr = self._records[i]
             if last['id'] != curr['id']:
+                i += 1
                 continue
             if 'gacha_type' in last and 'gacha_type' in curr:
-                if curr['gacha_type'] in ('400',):
+                last_gt = last['gacha_type']
+                curr_gt = curr['gacha_type']
+                if last_gt == '301' and curr_gt == '400':
                     self._records.pop(i - 1)
+                    i -= 1
+                    continue
             self._records.pop(i)
 
     def maps(self, mapping: Callable):
