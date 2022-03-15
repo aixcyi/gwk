@@ -62,7 +62,7 @@ def main():
     # 因而需要合并本地留存的祈愿记录，形成一份完整的祈愿历史记录。
     path_m = f'./records_{branch.uid}.json'
     log('导出文件 ' + path_m)
-    with open(path_m, 'a+', encoding='UTF-8') as f:
+    with open(path_m, 'r', encoding='UTF-8') as f:
         master.load(f)
         master.pad()
     master += branch
