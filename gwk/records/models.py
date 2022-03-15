@@ -280,10 +280,12 @@ class Wish:
         :raise json.decoder.JSONDecodeError:
         """
         # 空文件也会引发这个错误，但这种错误不应该面向用户引发。
+        fp.seek(0)
         if len(fp.read(1)) < 1:
             return {}
 
         # 异常引发原因比较多，容易一叶障目，故不拦截json.load()的异常。
+        fp.seek(0)
         content = json.load(fp)
 
         # 基础检查：
