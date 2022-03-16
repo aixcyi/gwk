@@ -284,7 +284,8 @@ class Wish:
         :raise UnsupportedJsonStruct:
         :raise json.decoder.JSONDecodeError:
         """
-        # 空文件也会引发这个错误，但这种错误不应该面向用户引发。
+        # 空文件也会引发JSONDecodeError，但这种场景不应该向用户抛出异常，
+        # 因此在这里通过代码避免。
         fp.seek(0)
         if len(fp.read(1)) < 1:
             return {}
