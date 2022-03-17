@@ -131,6 +131,7 @@ dmypy.json
 # IDEs
 /.vscode
 /.idea
+*.code-workspace
 
 # Testing Output files
 /tests/*.json
