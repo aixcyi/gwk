@@ -1,37 +1,13 @@
 # -*- coding: utf-8 -*-
 
-__all__ = [
-    'GenshinResponse',
-    'RawCollector',
-]
-
 from typing import Callable, Dict, Any
 
-from requests import Response
 from requests import get as http_get
 
 from gwk.constants import WishType
-from gwk.records.models import Wish
-from gwk.throwables import (
-    AuthNotAvailable, RawRespDecodeError, RawRespTypeError
-)
-
-
-class GenshinResponse:
-    """
-    原神HTTP响应的包装类。
-    """
-
-    def __init__(self, resp: Response):
-        try:
-            content: dict = resp.json()
-            self.retcode: int = content['retcode']
-            self.message: str = content['message']
-            self.data: Any = content['data']
-        except ValueError as e:
-            raise RawRespDecodeError() from e
-        except KeyError as e:
-            raise RawRespTypeError(e.args[0]) from e
+from gwk.io.web.wraps import GenshinResponse
+from gwk.models import Wish
+from gwk.throwables import AuthNotAvailable
 
 
 class RawCollector:

@@ -1,14 +1,50 @@
 # -*- coding: utf-8 -*-
 
-__all__ = [
-    'save_as_uigf',
-]
+import json
+from typing import IO
 
 from xlsxwriter import Workbook
 
 from gwk.constants import WishType, GachaType
-from gwk.records.models import Wish
+from gwk.models import Wish
 from gwk.utils import classify
+
+
+def migrate(fp: IO) -> Wish:
+    """
+    将旧项目导出的JSON文件转换为 Wish 。
+
+    [genshin-gacha-kit](https://github.com/aixcyi/genshin-gacha-kit)
+
+    :param fp:
+    :return:
+    """
+    content = json.load(fp)
+    wish = Wish()
+
+    if type(content) is not dict:
+        raise TypeError('文件格式不正确。')
+
+    if 'infos' not in content or type(content['infos']) is not dict:
+        raise TypeError('文件格式不正确。')
+    wish.uid = content['infos'].get('uid', '')
+    wish.region = content['infos'].get('region', '')
+    wish.language = content['infos'].get('lang', '')
+
+    def mapping(r) -> dict:
+        r['gacha_type'] = w
+        r['item_id'] = ''
+        r['count'] = '1'
+        r['uigf_gacha_type'] = w
+        return r
+
+    if 'records' not in content and type(content['records']) is not dict:
+        raise TypeError('文件格式不正确。')
+    for w in content['records']:
+        wish += list(map(mapping, content['records'][w]))
+    wish.sort(key=lambda r: (r['uigf_gacha_type'], r['time'], r['id']))
+
+    return wish
 
 
 def save_as_uigf(

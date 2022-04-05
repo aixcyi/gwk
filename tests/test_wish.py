@@ -3,14 +3,10 @@ from random import random
 from time import sleep
 
 from gwk.constants import WishType
-from gwk.records.excel import save_as_uigf
-from gwk.records.models import Wish
-from gwk.records.raw import RawCollector
-from gwk.utils import (
-    extract_auths,
-    get_logfile,
-    map_raw_to_uigf_j2,
-)
+from gwk.io.local import extract_auths, get_logfile, save_as_uigf
+from gwk.io.web import RawCollector
+from gwk.models import Wish
+from gwk.tools.mappings import map_raw_to_uigf_j2
 
 
 def log(text):

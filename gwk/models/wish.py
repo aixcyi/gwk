@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 
-__all__ = [
-    'Wish',
-    'migrate',
-]
-
 import json
 from datetime import datetime
 from typing import *
@@ -12,34 +7,8 @@ from typing import *
 from gwk import UIGF_APP_NAME, UIGF_APP_VERSION, UIGF_VERSION
 from gwk.constants import *
 from gwk.throwables import *
-from gwk.utils import classify, TNF, strptz
-
-
-def _check_tnf(obj, attr: str, new_value):
-    """
-    使用TNF策略校验与合并对象属性。
-
-    TNF决策值应当存在该对象名为 "merge_{attr}" 的属性中，
-    如果缺少这个属性，将会引发异常。
-
-    :param obj: 目标对象（类实例）
-    :param attr: 属性名称。
-    :param new_value: 新的值。
-    """
-    old_value = getattr(obj, attr)
-    policy = getattr(obj, 'merge_' + attr)
-
-    if old_value == new_value:
-        return
-
-    if policy is True:
-        setattr(obj, attr, new_value)
-    elif policy is None:
-        pass
-    elif policy is False:
-        raise MergingException(
-            attr, old_value, new_value, type(obj).__name__
-        )
+from gwk.typing import check_tnf, TNF
+from gwk.utils import classify, strptz
 
 
 class Wish:
@@ -124,9 +93,9 @@ class Wish:
                     f'{self.wish_type!s} 类型的相加。'
                 )
         if self.merging_check:
-            _check_tnf(self, 'uid', o.uid)
-            _check_tnf(self, 'region', o.region)
-            _check_tnf(self, 'language', o.language)
+            check_tnf(self, 'uid', o.uid)
+            check_tnf(self, 'region', o.region)
+            check_tnf(self, 'language', o.language)
         else:
             self.uid = o.uid
             self.region = o.region
@@ -351,40 +320,3 @@ class Wish:
         :return: {'角色': {'5': {'甘雨': [单条祈愿记录, ...], }}}
         """
         return classify(self._records, 'item_type', 'rank_type', 'name')
-
-
-def migrate(fp: IO) -> Wish:
-    """
-    将旧项目导出的JSON文件转换为 Wish 。
-
-    [genshin-gacha-kit](https://github.com/aixcyi/genshin-gacha-kit)
-
-    :param fp:
-    :return:
-    """
-    content = json.load(fp)
-    wish = Wish()
-
-    if type(content) is not dict:
-        raise TypeError('文件格式不正确。')
-
-    if 'infos' not in content or type(content['infos']) is not dict:
-        raise TypeError('文件格式不正确。')
-    wish.uid = content['infos'].get('uid', '')
-    wish.region = content['infos'].get('region', '')
-    wish.language = content['infos'].get('lang', '')
-
-    def mapping(r) -> dict:
-        r['gacha_type'] = w
-        r['item_id'] = ''
-        r['count'] = '1'
-        r['uigf_gacha_type'] = w
-        return r
-
-    if 'records' not in content and type(content['records']) is not dict:
-        raise TypeError('文件格式不正确。')
-    for w in content['records']:
-        wish += list(map(mapping, content['records'][w]))
-    wish.sort(key=lambda r: (r['uigf_gacha_type'], r['time'], r['id']))
-
-    return wish
