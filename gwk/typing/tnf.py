@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import *
+from typing import Literal
 
 from gwk.throwables import *
 

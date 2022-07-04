@@ -10,29 +10,20 @@ from datetime import datetime, timedelta
 from typing import *
 
 
-def classify(
-        listing: List[dict],
-        *classifications: Union[str, Tuple[str, Callable]]
-):
-    if len(classifications) < 1:
-        return listing
-    if type(classifications[0]) is str:
-        key, mapper = classifications[0], None
-    elif type(classifications[0]) is tuple:
-        key, mapper, *_ = classifications[0]
-    else:
-        raise TypeError()
-
+def classify(seq: List[dict], *keys: Union[str, Callable]):
+    if len(keys) < 1:
+        return seq
+    key = keys[0]
     topdict = dict()
-    for item in listing:
-        k = mapper(item[key]) if callable(mapper) else item[key]
+    for item in seq:
+        k = key(item) if callable(key) else item[key]
         if k not in topdict:
             topdict[k] = list()
         topdict[k].append(item)
 
-    if len(classifications) > 1:
+    if len(keys) > 1:
         for k in topdict:
-            topdict[k] = classify(topdict[k], *classifications[1:])
+            topdict[k] = classify(topdict[k], *keys[1:])
 
     return topdict
 
@@ -60,3 +51,17 @@ def earliest(fmt: str = '%Y-%m-%d') -> Union[str, datetime]:
     """
     time = datetime.now() - timedelta(days=6 * 30 - 1)
     return time.strftime(fmt) if fmt else time
+
+
+if __name__ == '__main__':
+    a = [
+        {"category": "对象", "label": "景区", "biz_id": "0c0fa0e8e91ce800"},
+        {"category": "对象", "label": "商户", "biz_id": "dd8fb16aeb1ce800"},
+        {"category": "对象", "label": "酒店", "biz_id": "bad16d8feb1ce800"},
+        {"category": "分类", "label": "卫生", "biz_id": "1f967953eb1ce800"},
+        {"category": "分类", "label": "发票", "biz_id": "34d54653eb1ce800"},
+        {"category": "分类", "label": "服务", "biz_id": "294f2856eb1ce800"},
+        {"category": "分类", "label": "治安", "biz_id": "5c2c7056eb1ce800"},
+    ]
+    print(classify(a, 'category'))
+    print(classify(a, lambda item: item.pop('category')))
