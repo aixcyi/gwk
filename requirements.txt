@@ -1,3 +1,0 @@
-requests~=2.12.5
-setuptools~=36.4.0
-XlsxWriter~=3.0.3
