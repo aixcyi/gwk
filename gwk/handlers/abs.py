@@ -35,7 +35,7 @@ class SingleGachaFileHandler:
 
     def is_supported(self, fp: Path | str) -> bool:
         """
-        当前处理器是否支持读取指定类型的文件。
+        快速（初步）判断当前处理器是否支持读取指定类型的文件。
         """
         if not isinstance(fp, Path):
             fp = Path(fp)
@@ -98,10 +98,17 @@ class SingleGachaJsonHandler(SingleGachaFileHandler):
         :param encoding: 字符编码。默认是 UTF-8 。
         :raise HandlingException: 解析异常。
         """
-        with open(fp, 'r', encoding=encoding) as f:
-            raw = json.load(f)
+        try:
+            with open(fp, 'r', encoding=encoding) as f:
+                raw = json.load(f)
+        except json.JSONDecodeError:
+            raise UnsupportedFormat('文件解析失败，可能不是JSON文件，或文件有损坏。')
+        except UnicodeError:
+            raise UnsupportedFormat(f'使用 {encoding} 读取时发生Unicode相关编码错误。')
+
         if not isinstance(raw, dict):
             raise UnsupportedFormat('JSON文件主体应当是一个对象。')
+
         self.load(raw)
 
     def write(
