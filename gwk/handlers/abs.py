@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from gwk.constants import GachaType
+from gwk.models import GachaData
 
 
 class HandlingException(Exception):
@@ -30,7 +30,8 @@ class SingleGachaFileHandler:
     单个祈愿记录文件的处理器抽象类。
     """
     supports: list[str]
-    records: dict[GachaType, list]
+
+    data: GachaData
 
     def is_supported(self, fp: Path | str) -> bool:
         """
@@ -78,6 +79,9 @@ class SingleGachaFileHandler:
 
 
 class SingleGachaJsonHandler(SingleGachaFileHandler):
+    """
+    单个祈愿记录JSON文件的处理器抽象类。
+    """
     supports: list[str] = ['.json']
 
     def read(
