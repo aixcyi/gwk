@@ -19,6 +19,40 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
 
     exported_at: datetime
 
+    def dump(self) -> dict:
+        return {
+            'uid': self.data.uid,
+            'lang': self.data.language,
+            'time': self.exported_at.timestamp(),
+            'typeMap': [[t.value, t.label] for t in GachaType],
+            'result': [
+                [
+                    gt.uigf_type,
+                    list(map(self.serialize_record, records))
+                ]
+                for gt, records in self.data.items()
+            ]
+        }
+
+    @staticmethod
+    def serialize_record(record: Record) -> list:
+        if record.id:
+            return [
+                record.time.strftime(DATETIME_FORMAT),
+                record.item.name,
+                record.item.item_type,
+                int(record.item.rank_type),
+                record.types.value,
+                record.id,
+            ]
+        else:
+            return [
+                record.time.strftime(DATETIME_FORMAT),
+                record.item.name,
+                record.item.item_type,
+                int(record.item.rank_type),
+            ]
+
     def load(self, raw: dict):
 
         if 'uid' not in raw or not isinstance(raw['uid'], str):
@@ -74,37 +108,3 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
             id=rid,
             time=datetime.strptime(time, DATETIME_FORMAT),
         )
-
-    def dump(self) -> dict:
-        return {
-            'uid': self.data.uid,
-            'lang': self.data.language,
-            'time': self.exported_at.timestamp(),
-            'typeMap': [[t.value, t.label] for t in GachaType],
-            'result': [
-                [
-                    gt.uigf_type,
-                    list(map(self.serialize_record, records))
-                ]
-                for gt, records in self.data.items()
-            ]
-        }
-
-    @staticmethod
-    def serialize_record(record: Record) -> list:
-        if record.id:
-            return [
-                record.time.strftime(DATETIME_FORMAT),
-                record.item.name,
-                record.item.item_type,
-                int(record.item.rank_type),
-                record.types.value,
-                record.id,
-            ]
-        else:
-            return [
-                record.time.strftime(DATETIME_FORMAT),
-                record.item.name,
-                record.item.item_type,
-                int(record.item.rank_type),
-            ]

@@ -35,18 +35,6 @@ class SingleGachaFileHandler:
             fp = Path(fp)
         return fp.suffix in self.supports
 
-    def read(
-            self,
-            fp: Path | str,
-            encoding='UTF-8',
-            *args,
-            **kwargs
-    ):
-        """
-        从文件中读取数据。
-        """
-        raise NotImplementedError
-
     def write(
             self,
             fp: Path | str = None,
@@ -56,5 +44,17 @@ class SingleGachaFileHandler:
     ):
         """
         将数据导出到文件。
+        """
+        raise NotImplementedError
+
+    def read(
+            self,
+            fp: Path | str,
+            encoding='UTF-8',
+            *args,
+            **kwargs
+    ):
+        """
+        从文件中读取数据。
         """
         raise NotImplementedError

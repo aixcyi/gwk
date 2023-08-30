@@ -25,6 +25,37 @@ class UigfJsonHandler(SingleGachaJsonHandler):
     exporter_name: str | None
     exporter_version: str | None
 
+    def dump(self) -> dict:
+        now = datetime.now()
+        return {
+            'info': {
+                'uid': self.data.uid or '',
+                'lang': self.data.language or 'zh-cn',
+                'export_time': (self.exported_at or now).strftime(DATETIME_FORMAT),
+                'export_timestamp': int((self.exported_at or now).timestamp()),
+                'export_app': self.exporter_name or '',
+                'export_app_version': self.exporter_version or '',
+                'uigf_version': self.versions[-1],
+            },
+            'list': [
+                {
+                    "uid": record.uid,
+                    "gacha_type": record.types.value,
+                    "item_id": record.item.id,
+                    "count": str(record.count),
+                    "time": record.time.strftime(DATETIME_FORMAT),
+                    "name": record.item.name,
+                    "lang": record.item.language,
+                    "item_type": record.item.item_type,
+                    "rank_type": str(record.item.rank_type),
+                    "id": record.id,
+                    "uigf_gacha_type": record.types.uigf_type,
+                }
+                for types, records in self.data.items()
+                for record in records
+            ],
+        }
+
     def load(self, raw: dict):
 
         if 'info' not in raw or not isinstance(raw['info'], dict):
@@ -87,34 +118,3 @@ class UigfJsonHandler(SingleGachaJsonHandler):
             count=int(row['count']) if 'count' in row else None,
         )
         return record
-
-    def dump(self) -> dict:
-        now = datetime.now()
-        return {
-            'info': {
-                'uid': self.data.uid or '',
-                'lang': self.data.language or 'zh-cn',
-                'export_time': (self.exported_at or now).strftime(DATETIME_FORMAT),
-                'export_timestamp': int((self.exported_at or now).timestamp()),
-                'export_app': self.exporter_name or '',
-                'export_app_version': self.exporter_version or '',
-                'uigf_version': self.versions[-1],
-            },
-            'list': [
-                {
-                    "uid": record.uid,
-                    "gacha_type": record.types.value,
-                    "item_id": record.item.id,
-                    "count": str(record.count),
-                    "time": record.time.strftime(DATETIME_FORMAT),
-                    "name": record.item.name,
-                    "lang": record.item.language,
-                    "item_type": record.item.item_type,
-                    "rank_type": str(record.item.rank_type),
-                    "id": record.id,
-                    "uigf_gacha_type": record.types.uigf_type,
-                }
-                for types, records in self.data.items()
-                for record in records
-            ],
-        }

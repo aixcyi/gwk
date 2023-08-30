@@ -28,33 +28,6 @@ class SingleGachaJsonHandler(SingleGachaFileHandler):
     """
     supports: list[str] = ['.json']
 
-    def read(self, fp: Path | str, encoding='UTF-8', *args, **kwargs):
-        """
-        从JSON文件中读取数据，并调用 ``.load()`` 进行解析。
-
-        :param fp: 文件地址。
-        :param encoding: 字符编码。默认是 UTF-8 。
-        :raise HandlingException: 解析异常。
-        """
-        try:
-            with open(fp, 'r', encoding=encoding) as f:
-                raw = json.load(f)
-        except json.JSONDecodeError:
-            raise UnsupportedFormat('文件解析失败，可能不是JSON文件，或文件有损坏。')
-        except UnicodeError:
-            raise UnsupportedFormat(f'使用 {encoding} 读取时发生Unicode相关编码错误。')
-
-        if not isinstance(raw, dict):
-            raise UnsupportedFormat('JSON文件主体应当是一个对象。')
-
-        self.load(raw)
-
-    def load(self, raw: dict):
-        """
-        从原始数据中解析并读取数据。
-        """
-        raise NotImplementedError
-
     def write(
             self,
             fp: Path | str = None,
@@ -80,5 +53,32 @@ class SingleGachaJsonHandler(SingleGachaFileHandler):
     def dump(self) -> dict:
         """
         将数据整理成准备写到文件中的数据流。
+        """
+        raise NotImplementedError
+
+    def read(self, fp: Path | str, encoding='UTF-8', *args, **kwargs):
+        """
+        从JSON文件中读取数据，并调用 ``.load()`` 进行解析。
+
+        :param fp: 文件地址。
+        :param encoding: 字符编码。默认是 UTF-8 。
+        :raise HandlingException: 解析异常。
+        """
+        try:
+            with open(fp, 'r', encoding=encoding) as f:
+                raw = json.load(f)
+        except json.JSONDecodeError:
+            raise UnsupportedFormat('文件解析失败，可能不是JSON文件，或文件有损坏。')
+        except UnicodeError:
+            raise UnsupportedFormat(f'使用 {encoding} 读取时发生Unicode相关编码错误。')
+
+        if not isinstance(raw, dict):
+            raise UnsupportedFormat('JSON文件主体应当是一个对象。')
+
+        self.load(raw)
+
+    def load(self, raw: dict):
+        """
+        从原始数据中解析并读取数据。
         """
         raise NotImplementedError
