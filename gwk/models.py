@@ -30,17 +30,17 @@ class Record:
     """
     types: GachaType
     item: Item
-    id: str = None
+    id: str = ''
     count: int = 1
     time: datetime = None
-    uid: str = None
+    uid: str = ''
 
 
 class GachaData(dict[GachaType, list[Record]]):
     """
     包含所有卡池的所有祈愿记录（抽卡记录）的类。
     """
-    uid: str = None
+    uid: str = ''
     region: str = 'cn_gf01'
     language: str = 'zh-cn'
 
