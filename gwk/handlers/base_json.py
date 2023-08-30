@@ -16,20 +16,10 @@ class UnsupportedFormat(HandlingException):
 
 class MissingField(HandlingException):
 
-    def __init__(self, field: str, usage: str):
+    def __init__(self, field: str, usage: str, value_desc: str):
         self.field = field
         self.usage = usage
-        self.msg = f'缺少{usage}的 {field} 字段。'
-
-
-class WrongFieldType(HandlingException):
-
-    def __init__(self, field: str, usage: str, types: type | tuple[type, ...], type_description: str):
-        self.field = field
-        self.usage = usage
-        self.types = types
-        self.desc = type_description
-        self.msg = f'{usage} {field} 字段应当是一个 {type_description}'
+        self.msg = f'缺少{usage}的 {field} 字段，或该字段的值不是一个 {value_desc} 。'
 
 
 class SingleGachaJsonHandler(SingleGachaFileHandler):
@@ -38,25 +28,7 @@ class SingleGachaJsonHandler(SingleGachaFileHandler):
     """
     supports: list[str] = ['.json']
 
-    @staticmethod
-    def assert_datastructure(data: dict, *exceptions: MissingField | WrongFieldType):
-        """
-        提供 ``MissingField`` 可以断言字段存在于 ``data`` 中；
-        提供 ``WrongFieldType`` 可以断言字段值类型正确。
-        """
-        for e in exceptions:
-            if isinstance(e, MissingField) and e.field not in data:
-                raise e
-            if isinstance(e, WrongFieldType) and not isinstance(data[e.field], e.types):
-                raise e
-
-    def read(
-            self,
-            fp: Path | str,
-            encoding='UTF-8',
-            *args,
-            **kwargs
-    ):
+    def read(self, fp: Path | str, encoding='UTF-8', *args, **kwargs):
         """
         从JSON文件中读取数据，并调用 ``.load()`` 进行解析。
 

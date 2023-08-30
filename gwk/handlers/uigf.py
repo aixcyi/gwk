@@ -7,17 +7,11 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
-from typing import NamedTuple
 
 from gwk.constants import DATETIME_FORMAT, GachaType
-from gwk.handlers.base_json import MissingField, SingleGachaJsonHandler, WrongFieldType
+from gwk.handlers.base_json import MissingField, SingleGachaJsonHandler
 from gwk.models import Item, Record
 from gwk.utils import purify
-
-
-class ExporterInfo(NamedTuple):
-    name: str | None
-    version: str | None
 
 
 class UigfJsonHandler(SingleGachaJsonHandler):
@@ -26,101 +20,101 @@ class UigfJsonHandler(SingleGachaJsonHandler):
     """
     versions: list[str] = ['v2.0', 'v2.1', 'v2.2']
 
-    version: str | None = None
-    exporter: ExporterInfo
-    exported_at: datetime | None = None
+    version: str | None
+    exported_at: datetime | None
+    exporter_name: str | None
+    exporter_version: str | None
 
     def load(self, raw: dict):
 
-        # ---------------- 校验文件结构 ----------------
+        if 'info' not in raw or not isinstance(raw['info'], dict):
+            raise MissingField('info', '存放文件信息', '对象')
+        if 'list' not in raw or not isinstance(raw['list'], list):
+            raise MissingField('list', '存放祈愿记录', '数组')
 
-        self.assert_datastructure(
-            raw,
-            MissingField('info', '存放文件信息'),
-            MissingField('list', '存放祈愿记录'),
-            WrongFieldType('info', '文件信息', dict, '对象'),
-            WrongFieldType('list', '祈愿历史', list, '数组'),
-        )
-        info: dict = raw['info']
-        records: list = raw['list']
+        # --------------------------------
 
-        # ---------------- 读取信息字段 ----------------
+        headers = defaultdict(lambda: None, raw['info'])
 
-        self.version = purify(info.get('uigf_version'), str)
-        self.data.uid = purify(info.get('uid'), str)
-        self.data.language = purify(info.get('lang'), str)
-        self.exporter = ExporterInfo(
-            purify(info.get('export_app'), str),
-            purify(info.get('export_app_version'), str)
-        )
-        self._parse_export_time(info)
+        self.data.uid = purify(headers['uid'], str)
+        self.data.language = purify(headers['lang'])
 
-        # ---------------- 校验祈愿记录 ----------------
+        self.version = purify(headers['uigf_version'])
+        self.exported_at = self.parse_export_time(headers)
+        self.exporter_name = purify(headers['export_app'])
+        self.exporter_version = purify(headers['export_app_version'])
 
-        for r in records:
-            if not isinstance(r, dict):
+        # --------------------------------
+
+        rows: list = raw['list']
+
+        for row in rows:
+            if not isinstance(row, dict):
                 continue
-            data = defaultdict(lambda: '', r)
-            record = Record(
-                id=data['id'],
-                time=datetime.strptime(data['time'], DATETIME_FORMAT),
-                item=Item(**data),
-                count=int(data.get('count', 1)),
-                gacha_type=GachaType(data['gacha_type']),
-                uid=data['uid'],
-            )
+            try:
+                record = self.parse_row(row)
+            except:
+                continue
             self.data[record.types].append(record)
 
-        # ---------------- 载入解析结束 ----------------
-
-    def _parse_export_time(self, info: dict):
-        """
-        当 ``export_time`` 字段解析失败时自动使用 ``export_timestamp`` 字段的值，而不考虑版本。
-        """
-        export_time = info.get('export_time')
-        if isinstance(export_time, str):
-            try:
-                self.exported_at = datetime.strptime(export_time, DATETIME_FORMAT)
-                return
-            except ValueError:
-                pass
-
-        export_timestamp = info.get('export_timestamp')
+    @staticmethod
+    def parse_export_time(headers: dict) -> datetime | None:
         try:
-            stamp = float(export_timestamp)
+            return datetime.strptime(headers['export_time'], DATETIME_FORMAT)
         except ValueError:
-            return
+            pass
+        try:
+            return datetime.fromtimestamp(int(headers['export_timestamp']))
+        except (ValueError, OSError):
+            pass
+        return None
 
-        self.exported_at = datetime.fromtimestamp(stamp)
+    @staticmethod
+    def parse_row(row: dict) -> Record:
+        item = Item(
+            name=str(row['name']),
+            item_type=str(row['item_type']),
+            rank_type=str(row['rank_type']),
+        )
+        if 'lang' in row:
+            item.language = str(row['lang'])
+
+        record = Record(
+            types=GachaType(row['gacha_type']),
+            item=item,
+            id=row['id'] if 'id' in row else None,
+            uid=row['uid'] if 'uid' in row else None,
+            count=int(row['count']) if 'count' in row else None,
+        )
+        return record
 
     def dump(self) -> dict:
         now = datetime.now()
-        info = {
-            'uid': self.data.uid or '',
-            'lang': self.data.language or '',
-            'export_time': (self.exported_at or now).strftime(DATETIME_FORMAT),
-            'export_timestamp': int((self.exported_at or now).timestamp()),
-            'export_app': self.exporter.name or '',
-            'export_app_version': self.exporter.version or '',
-            'uigf_version': self.versions[-1],
-        }
-        data = [
-            {
-                "uid": record.uid,
-                "gacha_type": record.types.value,
-                "item_id": record.item.id,
-                "count": str(record.count),
-                "time": record.time.strftime(DATETIME_FORMAT),
-                "name": record.item.name,
-                "lang": record.item.lang,
-                "item_type": record.item.types,
-                "rank_type": str(record.item.rank),
-                "id": record.id,
-                "uigf_gacha_type": record.types.uigf_type,
-            }
-            for types, records in self.data.items()
-            for record in records
-        ]
         return {
-            'info': info, 'list': data,
+            'info': {
+                'uid': self.data.uid or '',
+                'lang': self.data.language or 'zh-cn',
+                'export_time': (self.exported_at or now).strftime(DATETIME_FORMAT),
+                'export_timestamp': int((self.exported_at or now).timestamp()),
+                'export_app': self.exporter_name or '',
+                'export_app_version': self.exporter_version or '',
+                'uigf_version': self.versions[-1],
+            },
+            'list': [
+                {
+                    "uid": record.uid,
+                    "gacha_type": record.types.value,
+                    "item_id": record.item.id,
+                    "count": str(record.count),
+                    "time": record.time.strftime(DATETIME_FORMAT),
+                    "name": record.item.name,
+                    "lang": record.item.language,
+                    "item_type": record.item.item_type,
+                    "rank_type": str(record.item.rank_type),
+                    "id": record.id,
+                    "uigf_gacha_type": record.types.uigf_type,
+                }
+                for types, records in self.data.items()
+                for record in records
+            ],
         }
