@@ -115,6 +115,7 @@ class UigfJsonHandler(SingleGachaJsonHandler):
 
         record = Record(
             types=GachaType(row['gacha_type']),
+            time=datetime.strptime(row['time'], DATETIME_FORMAT),
             item=item,
             id=row['id'] if 'id' in row else None,
             uid=row['uid'] if 'uid' in row else self.data.uid,

@@ -29,10 +29,10 @@ class Record:
     祈愿记录（抽卡记录）。
     """
     types: GachaType
+    time: datetime
     item: Item
     id: str = ''
     count: int = 1
-    time: datetime = None
     uid: str = ''
 
 

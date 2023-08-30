@@ -107,8 +107,8 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
         )
         return Record(
             types=GachaType(gacha_type),
+            time=datetime.strptime(time, DATETIME_FORMAT),
             item=item,
             id=rid,
-            time=datetime.strptime(time, DATETIME_FORMAT),
             uid=self.data.uid,
         )
