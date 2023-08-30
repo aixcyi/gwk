@@ -43,7 +43,7 @@ class SingleGachaJsonHandler(SingleGachaFileHandler):
         :param encoding: 字符编码。默认是 UTF-8 。
         :param minimum: 是否以最简格式写入（去除格式上的所有空格）。
         """
-        with open(fp, 'r', encoding=encoding) as f:
+        with open(fp, 'w', encoding=encoding) as f:
             data = self.dump()
             if minimum:
                 json.dump(data, f, ensure_ascii=False, separators=(',', ':'))

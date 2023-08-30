@@ -20,10 +20,10 @@ class UigfJsonHandler(SingleGachaJsonHandler):
     """
     versions: list[str] = ['v2.0', 'v2.1', 'v2.2']
 
-    version: str | None
-    exported_at: datetime | None
-    exporter_name: str | None
-    exporter_version: str | None
+    version: str = None
+    exported_at: datetime = None
+    exporter_name: str = None
+    exporter_version: str = None
 
     def dump(self) -> dict:
         now = datetime.now()

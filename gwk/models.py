@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from constants import GachaType
+from gwk.constants import GachaType
 
 
 @dataclass
@@ -20,7 +20,7 @@ class Item:
     item_type: str
     rank_type: str
     language: str = 'zh-cn'
-    id: str | None = None
+    id: str = ''
 
 
 @dataclass
@@ -30,10 +30,10 @@ class Record:
     """
     types: GachaType
     item: Item
-    id: str | None = None
+    id: str = None
     count: int = 1
-    time: datetime | None = None
-    uid: str | None = None
+    time: datetime = None
+    uid: str = None
 
 
 class GachaData(dict[GachaType, list[Record]]):
@@ -47,3 +47,8 @@ class GachaData(dict[GachaType, list[Record]]):
     @property
     def total(self) -> int:
         return sum(len(value) for value in self.values())
+
+    def __getitem__(self, key):
+        if key not in self:
+            self.__setitem__(key, list())
+        return super().__getitem__(key)

@@ -56,17 +56,17 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
     def load(self, raw: dict):
 
         if 'uid' not in raw or not isinstance(raw['uid'], str):
-            raise MissingField('uid', '玩家游戏ID', '字符串'),
+            raise MissingField('uid', '玩家游戏ID', '字符串')
         if 'time' not in raw or not isinstance(raw['time'], int):
-            raise MissingField('time', '记录导出时间', '整数'),
+            raise MissingField('time', '记录导出时间', '整数')
         if 'result' not in raw or not isinstance(raw['result'], list):
-            raise MissingField('result', '存放祈愿记录', '数组'),
+            raise MissingField('result', '存放祈愿记录', '数组')
 
         # --------------------------------
 
         self.data.uid = raw['uid']
         self.data.language = purify(raw.get('lang'), str)
-        self.exported_at = datetime.fromtimestamp(raw['time'])
+        self.exported_at = datetime.fromtimestamp(raw['time'] / 1000)
 
         # --------------------------------
 
@@ -88,8 +88,7 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
                     continue
                 self.data[record.types].append(record)
 
-    @staticmethod
-    def parse_row(row: list, default_gacha_type: GachaType) -> Record:
+    def parse_row(self, row: list, default_gacha_type: GachaType) -> Record:
         if len(row) >= 6:
             time, name, item_type, rank_type, gacha_type, rid, *_ = row
         else:
@@ -103,8 +102,9 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
             rank_type=str(rank_type),
         )
         return Record(
-            types=gacha_type,
+            types=GachaType(gacha_type),
             item=item,
             id=rid,
             time=datetime.strptime(time, DATETIME_FORMAT),
+            uid=self.data.uid,
         )

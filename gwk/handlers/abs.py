@@ -23,9 +23,9 @@ class SingleGachaFileHandler:
     """
     单个祈愿记录文件的处理器抽象类。
     """
-    supports: list[str]
+    supports: list[str] = []
 
-    data: GachaData
+    data: GachaData = GachaData()
 
     def is_supported(self, fp: Path | str) -> bool:
         """
