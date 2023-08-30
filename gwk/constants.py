@@ -29,7 +29,7 @@ DT_VERSION_START_2_3 = datetime(2021, 11, 24, 7, 0, 0)
 """
 
 
-class GachaType(str, Items):
+class GachaType(Items):
     """
     祈愿的卡池类型。
     """
