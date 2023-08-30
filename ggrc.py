@@ -94,7 +94,21 @@ def converter(
             handler.read(ifp)
         except HandlingException:
             continue
-        print(f'已使用 {Handler.__name__} 读取。')
+
+        rows_total_unload = handler.rows_total_read - handler.rows_total_loaded
+        if rows_total_unload > 0:
+            print(
+                f'使用 {Handler.__name__} '
+                f'读取 {handler.rows_total_read} 条记录，'
+                f'解析 {handler.rows_total_loaded} 条记录，'
+                f'有 {rows_total_unload} 条解析失败。'
+            )
+        else:
+            print(
+                f'使用 {Handler.__name__} '
+                f'读取 {handler.rows_total_read} 条记录，'
+                f'全部解析成功。'
+            )
 
         builder.data = handler.data
         builder.write(ofp)

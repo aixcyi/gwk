@@ -86,11 +86,13 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
                 continue
 
             for row in rows:
+                self.rows_total_read += 1
                 try:
                     record = self.parse_row(row, gt)
                 except:
                     continue
                 self.data[record.types].append(record)
+                self.rows_total_loaded += 1
 
     def parse_row(self, row: list, default_gacha_type: GachaType) -> Record:
         if len(row) >= 6:

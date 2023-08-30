@@ -28,6 +28,8 @@ class SingleGachaFileHandler:
     description: str = ''
 
     data: GachaData = GachaData()
+    rows_total_read = 0  # 读取文件后，进入读取祈愿记录的循环时开始计数
+    rows_total_loaded = 0  # 将对象放入 data 之后计一个数
 
     def is_supported(self, fp: Path | str) -> bool:
         """

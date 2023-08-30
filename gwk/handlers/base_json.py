@@ -75,6 +75,8 @@ class SingleGachaJsonHandler(SingleGachaFileHandler):
         if not isinstance(raw, dict):
             raise UnsupportedFormat('JSON文件主体应当是一个对象。')
 
+        self.rows_total_read = 0
+        self.rows_total_loaded = 0
         self.load(raw)
 
     def load(self, raw: dict):

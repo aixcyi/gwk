@@ -84,6 +84,7 @@ class UigfJsonHandler(SingleGachaJsonHandler):
         rows: list = raw['list']
 
         for row in rows:
+            self.rows_total_read += 1
             if not isinstance(row, dict):
                 continue
             try:
@@ -91,6 +92,7 @@ class UigfJsonHandler(SingleGachaJsonHandler):
             except:
                 continue
             self.data[record.types].append(record)
+            self.rows_total_loaded += 1
 
     @staticmethod
     def parse_export_time(headers: dict) -> datetime | None:
