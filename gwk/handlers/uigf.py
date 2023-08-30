@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import NamedTuple
 
 from gwk.constants import DATETIME_FORMAT, GachaType
-from gwk.handlers.abs import SingleGachaJsonHandler, UnsupportedFormat
+from gwk.handlers.base_json import MissingField, SingleGachaJsonHandler, WrongFieldType
 from gwk.models import Item, Record
 from gwk.utils import purify
 
@@ -34,15 +34,13 @@ class UigfJsonHandler(SingleGachaJsonHandler):
 
         # ---------------- 校验文件结构 ----------------
 
-        if 'info' not in raw:
-            raise UnsupportedFormat('缺少存放文件信息的 info 字段。')
-        if 'list' not in raw:
-            raise UnsupportedFormat('缺少存放祈愿记录的 list 字段。')
-        if not isinstance(raw['info'], dict):
-            raise UnsupportedFormat('存放文件信息的 dict 字段应当是一个对象。')
-        if not isinstance(raw['list'], list):
-            raise UnsupportedFormat('存放祈愿记录的 list 字段应当是一个数组。')
-
+        self.assert_datastructure(
+            raw,
+            MissingField('info', '存放文件信息'),
+            MissingField('list', '存放祈愿记录'),
+            WrongFieldType('info', '文件信息', dict, '对象'),
+            WrongFieldType('list', '祈愿历史', list, '数组'),
+        )
         info: dict = raw['info']
         records: list = raw['list']
 
