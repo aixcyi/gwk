@@ -78,9 +78,13 @@ def converter(
         return
 
     ofp = Path(save_to or file).absolute()
-    if ofp.exists() and ofp == ifp and not force:
-        if input('覆盖保存到输入数据的文件？Y/[n]')[:1] not in 'yY':
-            return
+    if ofp.exists() and not force:
+        if ofp == ifp:
+            if input('覆盖保存到输入数据的文件？Y/[n]')[:1] not in 'yY':
+                return
+        else:
+            if input('目标文件已存在，覆盖原有数据？Y/[n]')[:1] not in 'yY':
+                return
 
     for Handler in HANDLERS:
         handler = Handler()
