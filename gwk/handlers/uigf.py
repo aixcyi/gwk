@@ -18,7 +18,11 @@ class UigfJsonHandler(SingleGachaJsonHandler):
     """
     `统一可交换祈愿记录标准(UIGF) <https://github.com/DGP-Studio/Snap.Genshin/wiki/StandardFormat>`_ JSON格式文件处理器。
     """
+    abstract = False
     versions: list[str] = ['v2.0', 'v2.1', 'v2.2']
+    description = (
+        '统一可交换祈愿记录标准JSON格式（UIGF.J）处理器。'
+    )
 
     version: str = None
     exported_at: datetime = None

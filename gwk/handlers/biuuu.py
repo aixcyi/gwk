@@ -16,6 +16,10 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
     """
     biuuu 作者的 `原神祈愿记录导出工具（Genshin Wish Export） <https://github.com/biuuu/genshin-wish-export>`_ 导出的JSON文件处理器。
     """
+    abstract = False
+    description = (
+        '原神祈愿记录导出工具（作者：biuuu）导出的JSON文件处理器。'
+    )
 
     exported_at: datetime
 

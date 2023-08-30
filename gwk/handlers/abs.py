@@ -23,7 +23,9 @@ class SingleGachaFileHandler:
     """
     单个祈愿记录文件的处理器抽象类。
     """
+    abstract = True
     supports: list[str] = []
+    description: str = ''
 
     data: GachaData = GachaData()
 
