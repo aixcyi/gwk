@@ -104,8 +104,7 @@ class UigfJsonHandler(SingleGachaJsonHandler):
             pass
         return None
 
-    @staticmethod
-    def parse_row(row: dict) -> Record:
+    def parse_row(self, row: dict) -> Record:
         item = Item(
             name=str(row['name']),
             item_type=str(row['item_type']),
@@ -118,7 +117,7 @@ class UigfJsonHandler(SingleGachaJsonHandler):
             types=GachaType(row['gacha_type']),
             item=item,
             id=row['id'] if 'id' in row else None,
-            uid=row['uid'] if 'uid' in row else None,
+            uid=row['uid'] if 'uid' in row else self.data.uid,
             count=int(row['count']) if 'count' in row else None,
         )
         return record
