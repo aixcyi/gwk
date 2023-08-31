@@ -4,6 +4,7 @@ GWK 常量包。主要包含通用的常量和枚举。
 """
 __all__ = [
     'DATETIME_FORMAT',
+    'DT_DREAM_START',
     'DT_STAMP_OFFSET_CHANGE',
     'DT_VERSION_START_2_3',
     'GachaType'
@@ -16,6 +17,11 @@ from gwk.utils import Items
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 """
 通用日期时间格式。
+"""
+
+DT_DREAM_START = datetime(2020, 9, 28)
+"""
+梦开始的时间。（该常量用于模拟祈愿记录ID，因为有的软件将祈愿记录的ID当作有符号64位整数读取，导致不得不以缩短时间戳长度为代价换取兼容）
 """
 
 DT_STAMP_OFFSET_CHANGE = datetime(2020, 12, 31)

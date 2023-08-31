@@ -4,7 +4,7 @@ from pathlib import Path
 
 from rich import box
 
-from gwk.common import patch_data
+from gwk.common import patch_id64
 
 try:
     import click
@@ -112,7 +112,7 @@ def converter(
                 f'全部解析成功。'
             )
 
-        rows_total_broken, rows_total_effected = patch_data(handler.data)
+        rows_total_broken, rows_total_effected = patch_id64(handler.data)
         print(
             f'总计 {rows_total_broken} 条记录缺失 ID，'
             f'为 {rows_total_effected} 条记录补充了 ID。'
