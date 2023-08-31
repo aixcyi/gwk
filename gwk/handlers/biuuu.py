@@ -21,13 +21,11 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
         '原神祈愿记录导出工具（作者：biuuu）导出的JSON文件处理器。'
     )
 
-    exported_at: datetime
-
     def dump(self) -> dict:
         return {
             'uid': self.data.uid,
             'lang': self.data.language,
-            'time': self.exported_at.timestamp(),
+            'time': int(self.data.exported_at.timestamp() * 1000),
             'typeMap': [[t.value, t.label] for t in GachaType],
             'result': [
                 [
@@ -70,7 +68,7 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
 
         self.data.uid = raw['uid']
         self.data.language = purify(raw.get('lang'), str)
-        self.exported_at = datetime.fromtimestamp(raw['time'] / 1000)
+        self.data.exported_at = datetime.fromtimestamp(raw['time'] / 1000)
 
         # --------------------------------
 

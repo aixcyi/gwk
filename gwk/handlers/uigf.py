@@ -25,7 +25,6 @@ class UigfJsonHandler(SingleGachaJsonHandler):
     )
 
     version: str = None
-    exported_at: datetime = None
     exporter_name: str = None
     exporter_version: str = None
 
@@ -35,8 +34,8 @@ class UigfJsonHandler(SingleGachaJsonHandler):
             'info': {
                 'uid': self.data.uid or '',
                 'lang': self.data.language or 'zh-cn',
-                'export_time': (self.exported_at or now).strftime(DATETIME_FORMAT),
-                'export_timestamp': int((self.exported_at or now).timestamp()),
+                'export_time': (self.data.exported_at or now).strftime(DATETIME_FORMAT),
+                'export_timestamp': int((self.data.exported_at or now).timestamp()),
                 'export_app': self.exporter_name or '',
                 'export_app_version': self.exporter_version or '',
                 'uigf_version': self.versions[-1],
@@ -73,9 +72,9 @@ class UigfJsonHandler(SingleGachaJsonHandler):
 
         self.data.uid = purify(headers['uid'], str)
         self.data.language = purify(headers['lang'])
+        self.data.exported_at = self.parse_export_time(headers)
 
         self.version = purify(headers['uigf_version'])
-        self.exported_at = self.parse_export_time(headers)
         self.exporter_name = purify(headers['export_app'])
         self.exporter_version = purify(headers['export_app_version'])
 

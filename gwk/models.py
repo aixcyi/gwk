@@ -43,6 +43,7 @@ class GachaData(dict[GachaType, list[Record]]):
     uid: str = ''
     region: str = 'cn_gf01'
     language: str = 'zh-cn'
+    exported_at: datetime = None
 
     @staticmethod
     def key_(r: Record):
