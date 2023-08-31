@@ -44,6 +44,13 @@ class GachaData(dict[GachaType, list[Record]]):
     region: str = 'cn_gf01'
     language: str = 'zh-cn'
 
+    @staticmethod
+    def key_(r: Record):
+        """
+        分组或排序的依据。
+        """
+        return r.time
+
     @property
     def total(self) -> int:
         return sum(len(value) for value in self.values())
@@ -52,3 +59,7 @@ class GachaData(dict[GachaType, list[Record]]):
         if key not in self:
             self.__setitem__(key, list())
         return super().__getitem__(key)
+
+    def sort(self):
+        for gacha_type in self:
+            self[gacha_type].sort(key=self.key_)

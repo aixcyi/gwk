@@ -4,6 +4,8 @@ from pathlib import Path
 
 from rich import box
 
+from gwk.common import patch_data
+
 try:
     import click
     from rich.console import Console
@@ -109,6 +111,12 @@ def converter(
                 f'读取 {handler.rows_total_read} 条记录，'
                 f'全部解析成功。'
             )
+
+        rows_total_broken, rows_total_effected = patch_data(handler.data)
+        print(
+            f'总计 {rows_total_broken} 条记录缺失 ID，'
+            f'为 {rows_total_effected} 条记录补充了 ID。'
+        )
 
         builder.data = handler.data
         builder.write(ofp)

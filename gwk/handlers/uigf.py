@@ -94,6 +94,8 @@ class UigfJsonHandler(SingleGachaJsonHandler):
             self.data[record.types].append(record)
             self.rows_total_loaded += 1
 
+        self.data.sort()
+
     @staticmethod
     def parse_export_time(headers: dict) -> datetime | None:
         try:

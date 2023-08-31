@@ -94,6 +94,8 @@ class BiuuuJsonHandler(SingleGachaJsonHandler):
                 self.data[record.types].append(record)
                 self.rows_total_loaded += 1
 
+        self.data.sort()
+
     def parse_row(self, row: list, default_gacha_type: GachaType) -> Record:
         if len(row) >= 6:
             time, name, item_type, rank_type, gacha_type, rid, *_ = row
