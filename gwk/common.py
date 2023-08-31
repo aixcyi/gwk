@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from itertools import groupby
 
 from gwk.constants import DT_DREAM_START
@@ -6,7 +7,7 @@ from gwk.models import GachaData
 
 def patch_id64(data: GachaData, uid: str = None) -> tuple[int, int]:
     """
-    模拟生成祈愿记录的ID，并填充到数据集中。
+    模拟生成祈愿记录的ID，并补充到数据集中。
 
     模拟ID在设计上保证是一个有符号64位整数：
       - 祈愿时间戳，以原神开服当天的零点为起点。2023-11-29 9:46:40 以后是 9位。

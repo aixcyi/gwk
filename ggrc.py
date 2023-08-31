@@ -1,23 +1,22 @@
 #!./venv/Scripts/python.exe
 # -*- coding: utf-8 -*-
+from enum import Enum
 from pathlib import Path
-
-from rich import box
-
-from gwk.common import patch_id64
 
 try:
     import click
+    from rich import box
     from rich.console import Console
     from rich.table import Table
 except ImportError:
     print('pip install --user -r ./requirements.txt')
     print('请先安装依赖包。')
-    exit(0)
+    exit(-1)
 
 from gwk.handlers.abs import HandlingException, SingleGachaFileHandler
 from gwk.handlers.biuuu import BiuuuJsonHandler
 from gwk.handlers.uigf import UigfJsonHandler
+from gwk.common import patch_id64
 
 HANDLERS: tuple[type[SingleGachaFileHandler], ...] = (
     UigfJsonHandler,
@@ -25,6 +24,14 @@ HANDLERS: tuple[type[SingleGachaFileHandler], ...] = (
 )
 
 ego = Path(__file__).absolute()
+
+
+class ExitCode(Enum):
+    DONE = 0
+    UNKNOWN = -1
+    FILE_NOTFOUND = -10000
+    HANDLER_NOTFOUND = -10086
+    SOLUTION_NOTFOUND = -10100
 
 
 def warning(msg: str):
@@ -40,7 +47,7 @@ def cli():
     """
 
 
-@cli.command('list', help='列出所有处理器。')
+@cli.command('list', help='列出所有处理器及修复方案。')
 @click.help_option('-h', '--help', help='显示这份帮助信息。')
 def lister():
     table = Table('处理器', '描述', box=box.SIMPLE_HEAD)
@@ -50,80 +57,128 @@ def lister():
             continue
         if handler.abstract:
             continue
-        table.add_row(handler.__name__, handler.description)
+        if handler.__name__.endswith('Handler'):
+            name = handler.__name__[:-7]
+        else:
+            name = handler.__name__
+        table.add_row(name, handler.description)
 
     Console().print(table)
 
 
 @cli.command('convert', help='将文件转换到另一种格式。')
-@click.argument('handle_by')
 @click.argument('file')
-@click.option('-o', '--output', 'save_to', metavar='FILE', help='输出到哪里。')
-@click.option('-f', '--force', is_flag=True, help='不提示，直接保存。')
+@click.option('-s', '--save-to', metavar='FILE', help='输出到哪里。')
+@click.option('-r', '--reader', metavar='HANDLER', help='源格式的处理器。若不提供则自动识别。')
+@click.option('-w', '--writer', metavar='HANDLER', help='目标格式的处理器。默认与源格式处理器相同。')
+@click.option('--patch-id-64', is_flag=True,
+              help='模拟生成祈愿记录的ID，并补充到数据集中。模拟ID在设计上保证是一个有符号64位整数。')
+@click.option('-F', '--force', is_flag=True, help='不提示，直接保存。')
 @click.help_option('-h', '--help', help='显示这份帮助信息。')
 def converter(
-        handle_by: str,
         file: str,
         save_to: str = None,
+        reader: str = None,
+        writer: str = None,
+        patch_id_64: str = None,
         force: bool = False,
 ):
-    try:
-        Builder = HANDLERS[[h.__name__ for h in HANDLERS].index(handle_by)]
-        builder = Builder()
-    except ValueError:
-        warning(f'处理器 {handle_by} 不存在。请使用 {ego.name} list 命令查看所有处理器。')
-        return
+    # --------------------------------
+    # 校验
 
     ifp = Path(file).absolute()
     if not ifp.exists():
-        warning('文件不存在。')
-        return
+        warning(f'{ifp!s} 文件不存在。')
+        exit(ExitCode.FILE_NOTFOUND)
 
     ofp = Path(save_to or file).absolute()
     if ofp.exists() and not force:
         if ofp == ifp:
-            if input('覆盖保存到输入数据的文件？Y/[n]')[:1] not in 'yY':
-                return
+            if input('覆盖保存到输入数据的文件？y/[n] ')[:1] not in 'yY':
+                exit(ExitCode.FILE_NOTFOUND)
         else:
-            if input('目标文件已存在，覆盖原有数据？Y/[n]')[:1] not in 'yY':
-                return
+            if input('目标文件已存在，确认覆盖？y/[n] ')[:1] not in 'yY':
+                exit(ExitCode.FILE_NOTFOUND)
 
-    for Handler in HANDLERS:
-        handler = Handler()
-        if not handler.is_supported(ifp):
-            continue
+    # --------------------------------
+    # 读取
+
+    if reader:
         try:
-            handler.read(ifp)
-        except HandlingException:
-            continue
-
-        rows_total_unload = handler.rows_total_read - handler.rows_total_loaded
-        if rows_total_unload > 0:
-            print(
-                f'使用 {Handler.__name__} '
-                f'读取 {handler.rows_total_read} 条记录，'
-                f'解析 {handler.rows_total_loaded} 条记录，'
-                f'有 {rows_total_unload} 条解析失败。'
-            )
+            parser = HANDLERS[[h.__name__ for h in HANDLERS].index(f'{reader}Handler')]()
+        except ValueError:
+            warning(f'处理器 {reader} 不存在。请使用 {ego.name} list 命令查看所有处理器。')
+            exit(ExitCode.HANDLER_NOTFOUND)
+        try:
+            parser.read(ifp)
+        except HandlingException as e:
+            print(str(e))
+            exit(ExitCode.UNKNOWN)
+        except:
+            Console().print_exception()
+            exit(ExitCode.UNKNOWN)
+    else:
+        for Parser in HANDLERS:
+            if Parser.abstract:
+                continue
+            parser = Parser()
+            if not parser.is_supported(ifp):
+                continue
+            try:
+                parser.read(ifp)
+                break
+            except HandlingException:
+                continue
         else:
-            print(
-                f'使用 {Handler.__name__} '
-                f'读取 {handler.rows_total_read} 条记录，'
-                f'全部解析成功。'
-            )
+            print('找不到合适的源格式处理器。')
+            exit(ExitCode.HANDLER_NOTFOUND)
 
-        rows_total_broken, rows_total_effected = patch_id64(handler.data)
+    # ----------------
+
+    if writer:
+        try:
+            builder = HANDLERS[[h.__name__ for h in HANDLERS].index(f'{writer}Handler')]()
+        except ValueError:
+            warning(f'处理器 {writer} 不存在。请使用 {ego.name} list 命令查看所有处理器。')
+            exit(ExitCode.HANDLER_NOTFOUND)
+    else:
+        builder = type(parser)()
+
+    # ----------------
+
+    rows_total_unload = parser.rows_total_read - parser.rows_total_loaded
+    if rows_total_unload > 0:
+        print(
+            f'读取 {parser.rows_total_read} 条记录，'
+            f'解析 {parser.rows_total_loaded} 条记录，'
+            f'有 {rows_total_unload} 条解析失败。'
+        )
+    else:
+        print(
+            f'读取 {parser.rows_total_read} 条记录，'
+            f'全部解析成功。'
+        )
+
+    # --------------------------------
+    # 修复
+
+    data = parser.data
+
+    if patch_id_64:
+        rows_total_broken, rows_total_effected = patch_id64(data)
         print(
             f'总计 {rows_total_broken} 条记录缺失 ID，'
             f'为 {rows_total_effected} 条记录补充了 ID。'
         )
 
-        builder.data = handler.data
-        builder.write(ofp)
-        print(f'已使用 {Builder.__name__} 写入。')
-        return
+    # --------------------------------
+    # 保存
 
-    print('解析过程中找不到合适的处理器。未向文件写入任何数据。')
+    name = builder.__class__.__name__
+    name = name[:-1] if name.endswith('Handler') else name
+    builder.data = data
+    builder.write(ofp)
+    print(f'已使用 {name} 写入。')
 
 
 if __name__ == '__main__':
