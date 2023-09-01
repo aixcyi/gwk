@@ -43,7 +43,7 @@ def warning(msg: str):
 @click.help_option('-h', '--help', help='显示这份帮助信息。')
 def cli():
     """
-    各家祈愿记录导出文件的转换器。Genshin Gacha Records Converter。
+    各家祈愿记录导出文件的转换器。
     """
 
 
